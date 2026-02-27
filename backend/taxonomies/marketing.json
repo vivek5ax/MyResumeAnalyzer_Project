@@ -1,0 +1,36 @@
+{
+    "Digital Marketing": {
+        "weight": 1.2,
+        "skills": [
+            "SEO",
+            "SEM",
+            "PPC",
+            "Social Media Marketing",
+            "Email Marketing",
+            "Content Strategy",
+            "Campaign Management",
+            "Google Analytics"
+        ]
+    },
+    "Content & Design": {
+        "weight": 1.1,
+        "skills": [
+            "Copywriting",
+            "Graphic Design",
+            "Canva",
+            "Adobe Photoshop",
+            "Video Editing",
+            "Storytelling"
+        ]
+    },
+    "Performance & Growth": {
+        "weight": 1.3,
+        "skills": [
+            "Growth Hacking",
+            "Conversion Rate Optimization",
+            "A/B Testing",
+            "Customer Acquisition",
+            "Brand Management"
+        ]
+    }
+}

@@ -1,0 +1,120 @@
+{
+  "Clinical Core Competencies": {
+    "weight": 1.5,
+    "skills": [
+      "Patient Care",
+      "Clinical Assessment",
+      "Diagnosis",
+      "Treatment Planning",
+      "Care Coordination",
+      "Medical Documentation",
+      "Clinical Decision Making",
+      "Case Management",
+      "Disease Management",
+      "Emergency Response"
+    ]
+  },
+  "Diagnostics & Procedures": {
+    "weight": 1.4,
+    "skills": [
+      "Medical Imaging",
+      "Radiology",
+      "Laboratory Testing",
+      "Specimen Collection",
+      "Phlebotomy",
+      "Vital Signs Monitoring",
+      "Electrocardiography",
+      "Ultrasound",
+      "Diagnostic Interpretation",
+      "Pathology"
+    ]
+  },
+  "Medical Specializations": {
+    "weight": 1.3,
+    "skills": [
+      "Cardiology",
+      "Neurology",
+      "Pediatrics",
+      "Orthopedics",
+      "Oncology",
+      "Dermatology",
+      "Gynecology",
+      "Internal Medicine",
+      "Surgical Assistance",
+      "Anesthesiology"
+    ]
+  },
+  "Pharmaceutical & Therapeutics": {
+    "weight": 1.2,
+    "skills": [
+      "Pharmacology",
+      "Medication Administration",
+      "Drug Interaction Monitoring",
+      "Prescription Management",
+      "Therapeutic Procedures",
+      "IV Therapy"
+    ]
+  },
+  "Healthcare Technology & Informatics": {
+    "weight": 1.3,
+    "skills": [
+      "EHR",
+      "EMR",
+      "Hospital Information Systems",
+      "Health Informatics",
+      "Clinical Data Management",
+      "Telemedicine",
+      "Digital Health Platforms",
+      "Medical Coding",
+      "ICD Coding",
+      "CPT Coding"
+    ]
+  },
+  "Regulatory & Compliance": {
+    "weight": 1.5,
+    "skills": [
+      "HIPAA Compliance",
+      "Healthcare Regulations",
+      "Patient Confidentiality",
+      "Safety Protocols",
+      "Infection Control",
+      "Quality Assurance",
+      "Clinical Audits",
+      "Risk Management"
+    ]
+  },
+  "Anatomical & Foundational Knowledge": {
+    "weight": 1.1,
+    "skills": [
+      "Anatomy",
+      "Physiology",
+      "Medical Terminology",
+      "Pathophysiology",
+      "Biochemistry",
+      "Microbiology"
+    ]
+  },
+  "Research & Evidence-Based Practice": {
+    "weight": 1.2,
+    "skills": [
+      "Clinical Research",
+      "Evidence-Based Practice",
+      "Clinical Trials",
+      "Data Collection",
+      "Biostatistics",
+      "Research Methodology",
+      "Protocol Development"
+    ]
+  },
+  "Patient Support & Communication": {
+    "weight": 1.1,
+    "skills": [
+      "Patient Advocacy",
+      "Counseling",
+      "Health Education",
+      "Discharge Planning",
+      "Interdisciplinary Collaboration",
+      "Communication Skills"
+    ]
+  }
+}

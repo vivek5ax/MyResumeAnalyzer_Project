@@ -1,0 +1,115 @@
+{
+    "Programming Languages": {
+        "weight": 1.2,
+        "skills": [
+            "Python",
+            "Java",
+            "JavaScript",
+            "TypeScript",
+            "C++",
+            "C#",
+            "Ruby",
+            "Go",
+            "Rust",
+            "PHP",
+            "SQL",
+            "HTML",
+            "CSS"
+        ]
+    },
+    "Backend Development": {
+        "weight": 1.3,
+        "skills": [
+            "Django",
+            "Flask",
+            "FastAPI",
+            "Spring Boot",
+            "Node.js",
+            "Express",
+            "ASP.NET",
+            "Ruby on Rails",
+            "PostgreSQL",
+            "MongoDB",
+            "Redis",
+            "REST API",
+            "GraphQL"
+        ]
+    },
+    "Frontend Development": {
+        "weight": 1.1,
+        "skills": [
+            "React",
+            "Angular",
+            "Vue.js",
+            "Next.js",
+            "Tailwind CSS",
+            "Redux",
+            "Webpack",
+            "Bootstrap"
+        ]
+    },
+    "Data Science & AI": {
+        "weight": 1.4,
+        "skills": [
+            "Machine Learning",
+            "Deep Learning",
+            "Natural Language Processing",
+            "Computer Vision",
+            "TensorFlow",
+            "PyTorch",
+            "Scikit-learn",
+            "Pandas",
+            "NumPy",
+            "Keras",
+            "Large Language Models",
+            "BERT",
+            "Generative AI",
+            "Neural Networks",
+            "NLP"
+        ]
+    },
+    "Data Analysis & Visualization": {
+        "weight": 1.2,
+        "skills": [
+            "Matplotlib",
+            "Seaborn",
+            "Tableau",
+            "Power BI",
+            "Data Cleaning",
+            "Statistics",
+            "Probability",
+            "R Programming",
+            "Excel"
+        ]
+    },
+    "DevOps & Cloud": {
+        "weight": 1.4,
+        "skills": [
+            "AWS",
+            "Azure",
+            "Google Cloud",
+            "Docker",
+            "Kubernetes",
+            "Jenkins",
+            "Git",
+            "GitHub",
+            "GitLab",
+            "Terraform",
+            "CI/CD",
+            "Linux",
+            "Nginx",
+            "Apache"
+        ]
+    },
+    "Architecture & APIs": {
+        "weight": 1.3,
+        "skills": [
+            "Microservices",
+            "System Design",
+            "REST API",
+            "Design Patterns",
+            "Agile",
+            "Scrum"
+        ]
+    }
+}

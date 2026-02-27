@@ -1,0 +1,42 @@
+{
+    "Circuit Design & Hardware": {
+        "weight": 1.4,
+        "skills": [
+            "Circuit Analysis",
+            "PCB Design",
+            "Schematic Capture",
+            "Altium Designer",
+            "KiCad",
+            "AutoCAD Civil 3D",
+            "Microcontrollers",
+            "FPGA",
+            "VHDL",
+            "Verilog"
+        ]
+    },
+    "Power & Energy": {
+        "weight": 1.3,
+        "skills": [
+            "Power Systems",
+            "Electrical Wiring",
+            "High Voltage",
+            "Renewable Energy",
+            "Smart Grids",
+            "Transformers",
+            "PLC Programming",
+            "SCADA"
+        ]
+    },
+    "Control Systems": {
+        "weight": 1.2,
+        "skills": [
+            "Control Theory",
+            "Signal Processing",
+            "MATLAB",
+            "Simulink",
+            "Embedded Systems",
+            "Automation",
+            "Robotics"
+        ]
+    }
+}

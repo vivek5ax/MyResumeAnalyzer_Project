@@ -1,0 +1,22 @@
+{
+    "Soft Skills": {
+        "weight": 1.0,
+        "skills": [
+            "Communication",
+            "Leadership",
+            "Problem Solving",
+            "Critical Thinking",
+            "Teamwork",
+            "Adaptability",
+            "Time Management",
+            "Decision Making",
+            "Collaboration",
+            "Creativity",
+            "Emotional Intelligence",
+            "Conflict Resolution",
+            "Public Speaking",
+            "Research",
+            "Analytical Skills"
+        ]
+    }
+}

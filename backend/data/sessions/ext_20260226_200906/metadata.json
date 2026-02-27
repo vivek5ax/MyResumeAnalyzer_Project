@@ -1,0 +1,185 @@
+{
+    "session_id": "ext_20260226_200906",
+    "timestamp": "2026-02-26T20:09:06.588684",
+    "resume_filename": "Resume_pdf.pdf",
+    "jd_filename": "Job_desp_pdf.pdf",
+    "resume_clean": "vivek minipuri hyderabad telangana india cid211 91 9618943855 vivekm2023@gmail.com fl linkedin cid135 github objective penultimate-year computer science undergraduate strong skills data structures algorithms full-stack development focused building scalable systems real-world software solutions passionate competitive programming problem-solving delivering impactful outcomes software development education b.tech computer science cmr institute technology hyderabad expected 2027 cgpa 9.70/10 telangana india intermediate mpc sri chaitanya junior kalasala 2021 2023 percentage 99.3 telangana india class x ssc sr digi high school 2020 2021 gpa 10 telangana india skills programming languages python java c frameworks/libraries numpy pandas matplotlib seaborn databases mongodb sql developer tools vs code google colab postman git/github academic coursework data structures algorithms operating systems dbms oop cn frontend html css javascript react.js backend node.js express.js soft skills communication problem-solving time management troubleshooting projects smart locality mar 2025 may 2025 built role-based web platform streamline communication residents local authorities featuring complaint registration alerts events admin workflows automated notifications improved response efficiency reduced complaint resolution time 30 technologies html css javascript node.js mongodb project link linq dec 2025 developed secure campus event management system verified academic identities qr- based registration real-time attendance tracking implemented analytics dashboards digital certificate gener- ation export-ready reports using scalable architecture technologies next.js react typescript firebase vercel github live link internships aictegoogle ai/ml program acquired foundational knowledge artificial intelligence machine learning including data preprocessing model training evaluation certificate certifications courses ibm learner builder ai agent architect gained hands-on experience ai agent design prompt engineering applying large language models practical use cases certificate smart interviews certified smart coder demonstrated strong problem-solving skills proficiency data structures algorithms structured coding assessments certificate infosys python foundation certification validating core python programming skills logical problem-solving certificate salesforce agentforce specialist certified experience service workflows case automation certificate coding profiles leetcode solved 400 problems across arrays strings hash tables stacks queues linked lists trees leetcode.com/23r01a05ax hackerrank 5-star rating problem solving hackerrank.com/23r01a05ax codechef activeparticipantincompetitiveprogrammingcontestsstrengtheninglogicalreasoningandalgorithmic skills codechef.com/vivek5ax",
+    "jd_clean": "software development engineer sde microsoft microsoft dont write code build platforms power billions people businesses devices across world cloud infrastructure microsoft azure productivity tools like microsoft teams developer ecosystems like visual studio engineers create technology shapes world works connects looking passionate software development engineers sdes curious impact- driven ready solve problems global scale youll sde microsoft design build scalable secure high-performance software systems write clean maintainable well-tested production code collaborate product managers designers engineers debug complex distributed systems contribute architecture discussions technical design reviews improve system reliability observability performance participate code reviews mentor junior engineers wont implement features youll help define looking technical requirements strong proficiency one languages c c java python javascript/typescript solid understanding data structures algorithms object-oriented programming system design fundamentals operating systems basics networking concepts experience rest apis microservices distributed systems git ci/cd pipelines familiarity cloud platforms azure preferred experience testing frameworks debugging tools qualifications bachelors masters degree computer science related field equivalent practical experience bonus points open-source contributions experience building large-scale production systems knowledge containerization docker/kubernetes experience cloud-native development exposure ai/ml systems makes great microsoft engineer? growth mindset strong problem-solving ability clear communication skills ownership mentality customer-first thinking microsoft value diversity thought encourage engineers bring authentic selves work join microsoft? work products used billions competitive compensation benefits career growth learning opportunities access global engineering talent opportunity build technology empowers every person organization planet",
+    "resume_skills": {
+        "technical_skills": [
+            "css",
+            "git",
+            "github",
+            "html",
+            "java",
+            "javascript",
+            "large language models",
+            "machine learning",
+            "matplotlib",
+            "mongodb",
+            "next.js",
+            "node.js",
+            "numpy",
+            "pandas",
+            "python",
+            "react",
+            "seaborn",
+            "sql",
+            "typescript"
+        ],
+        "soft_skills": [
+            "communication",
+            "problem solving",
+            "time management"
+        ],
+        "categorized_skills": {
+            "DevOps & Cloud": [
+                "git",
+                "github"
+            ],
+            "Programming Languages": [
+                "css",
+                "html",
+                "java",
+                "javascript",
+                "python",
+                "sql",
+                "typescript"
+            ],
+            "Data Science & AI": [
+                "large language models",
+                "machine learning",
+                "numpy",
+                "pandas"
+            ],
+            "Data Analysis & Visualization": [
+                "matplotlib",
+                "seaborn"
+            ],
+            "Backend Development": [
+                "mongodb",
+                "node.js"
+            ],
+            "Frontend Development": [
+                "next.js",
+                "react"
+            ]
+        }
+    },
+    "jd_skills": {
+        "technical_skills": [
+            "azure",
+            "ci/cd",
+            "docker",
+            "git",
+            "java",
+            "javascript",
+            "kubernetes",
+            "microservices",
+            "python",
+            "system design",
+            "typescript"
+        ],
+        "soft_skills": [
+            "communication"
+        ],
+        "categorized_skills": {
+            "DevOps & Cloud": [
+                "azure",
+                "ci/cd",
+                "docker",
+                "git",
+                "kubernetes"
+            ],
+            "Programming Languages": [
+                "java",
+                "javascript",
+                "python",
+                "typescript"
+            ],
+            "Architecture & APIs": [
+                "microservices",
+                "system design"
+            ]
+        }
+    },
+    "bert_results": {
+        "exact_match": [
+            "Communication",
+            "Git",
+            "Java",
+            "JavaScript",
+            "Python",
+            "TypeScript"
+        ],
+        "partial_match": [
+            "GitHub"
+        ],
+        "irrelevant": [
+            "CSS",
+            "Express",
+            "HTML",
+            "Large Language Models",
+            "Machine Learning",
+            "Matplotlib",
+            "MongoDB",
+            "Next.js",
+            "Node.js",
+            "NumPy",
+            "Pandas",
+            "Problem Solving",
+            "React",
+            "SQL",
+            "Seaborn",
+            "Time Management"
+        ],
+        "jd_bert_skills": [
+            "Azure",
+            "CI/CD",
+            "Communication",
+            "Docker",
+            "Git",
+            "Java",
+            "JavaScript",
+            "Kubernetes",
+            "Microservices",
+            "Python",
+            "REST API",
+            "System Design",
+            "TypeScript"
+        ],
+        "resume_bert_skills": [
+            "CSS",
+            "Communication",
+            "Express",
+            "Git",
+            "GitHub",
+            "HTML",
+            "Java",
+            "JavaScript",
+            "Large Language Models",
+            "Machine Learning",
+            "Matplotlib",
+            "MongoDB",
+            "Next.js",
+            "Node.js",
+            "NumPy",
+            "Pandas",
+            "Problem Solving",
+            "Python",
+            "React",
+            "SQL",
+            "Seaborn",
+            "Time Management",
+            "TypeScript"
+        ]
+    },
+    "raw_counts": {
+        "resume": 3098,
+        "jd": 2499
+    },
+    "clean_counts": {
+        "resume": 2802,
+        "jd": 2009
+    }
+}
