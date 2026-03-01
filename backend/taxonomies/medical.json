@@ -1,120 +1,508 @@
 {
-  "Clinical Core Competencies": {
-    "weight": 1.5,
-    "skills": [
-      "Patient Care",
-      "Clinical Assessment",
-      "Diagnosis",
-      "Treatment Planning",
-      "Care Coordination",
-      "Medical Documentation",
-      "Clinical Decision Making",
-      "Case Management",
-      "Disease Management",
-      "Emergency Response"
-    ]
-  },
-  "Diagnostics & Procedures": {
-    "weight": 1.4,
-    "skills": [
-      "Medical Imaging",
-      "Radiology",
-      "Laboratory Testing",
-      "Specimen Collection",
-      "Phlebotomy",
-      "Vital Signs Monitoring",
-      "Electrocardiography",
-      "Ultrasound",
-      "Diagnostic Interpretation",
-      "Pathology"
-    ]
-  },
-  "Medical Specializations": {
-    "weight": 1.3,
-    "skills": [
-      "Cardiology",
-      "Neurology",
-      "Pediatrics",
-      "Orthopedics",
-      "Oncology",
-      "Dermatology",
-      "Gynecology",
-      "Internal Medicine",
-      "Surgical Assistance",
-      "Anesthesiology"
-    ]
-  },
-  "Pharmaceutical & Therapeutics": {
-    "weight": 1.2,
-    "skills": [
-      "Pharmacology",
-      "Medication Administration",
-      "Drug Interaction Monitoring",
-      "Prescription Management",
-      "Therapeutic Procedures",
-      "IV Therapy"
-    ]
-  },
-  "Healthcare Technology & Informatics": {
-    "weight": 1.3,
-    "skills": [
-      "EHR",
-      "EMR",
-      "Hospital Information Systems",
-      "Health Informatics",
-      "Clinical Data Management",
-      "Telemedicine",
-      "Digital Health Platforms",
-      "Medical Coding",
-      "ICD Coding",
-      "CPT Coding"
-    ]
-  },
-  "Regulatory & Compliance": {
-    "weight": 1.5,
-    "skills": [
-      "HIPAA Compliance",
-      "Healthcare Regulations",
-      "Patient Confidentiality",
-      "Safety Protocols",
-      "Infection Control",
-      "Quality Assurance",
-      "Clinical Audits",
-      "Risk Management"
-    ]
-  },
-  "Anatomical & Foundational Knowledge": {
-    "weight": 1.1,
-    "skills": [
-      "Anatomy",
-      "Physiology",
-      "Medical Terminology",
-      "Pathophysiology",
-      "Biochemistry",
-      "Microbiology"
-    ]
-  },
-  "Research & Evidence-Based Practice": {
-    "weight": 1.2,
-    "skills": [
-      "Clinical Research",
-      "Evidence-Based Practice",
-      "Clinical Trials",
-      "Data Collection",
-      "Biostatistics",
-      "Research Methodology",
-      "Protocol Development"
-    ]
-  },
-  "Patient Support & Communication": {
-    "weight": 1.1,
-    "skills": [
-      "Patient Advocacy",
-      "Counseling",
-      "Health Education",
-      "Discharge Planning",
-      "Interdisciplinary Collaboration",
-      "Communication Skills"
-    ]
-  }
+    "_meta": {
+        "domain": "medical",
+        "version": "2.0-alias-enhanced",
+        "last_updated": "2026-02-28"
+    },
+    "categories": {
+        "Clinical Core Competencies": {
+            "weight": 1.5,
+            "skills": [
+                {
+                    "name": "Patient Care",
+                    "aliases": [
+                        "Direct Patient Care",
+                        "Bedside Care",
+                        "Patient Assistance"
+                    ]
+                },
+                {
+                    "name": "Clinical Assessment",
+                    "aliases": [
+                        "Patient Assessment",
+                        "Clinical Evaluation",
+                        "Health Assessment"
+                    ]
+                },
+                {
+                    "name": "Diagnosis",
+                    "aliases": [
+                        "Medical Diagnosis"
+                    ]
+                },
+                {
+                    "name": "Treatment Planning",
+                    "aliases": [
+                        "Care Plans",
+                        "Treatment Strategy"
+                    ]
+                },
+                {
+                    "name": "Care Coordination",
+                    "aliases": [
+                        "Patient Coordination"
+                    ]
+                },
+                {
+                    "name": "Case Management",
+                    "aliases": []
+                },
+                {
+                    "name": "Disease Management",
+                    "aliases": [
+                        "Chronic Disease Management"
+                    ]
+                },
+                {
+                    "name": "Clinical Decision Making",
+                    "aliases": []
+                },
+                {
+                    "name": "Emergency Response",
+                    "aliases": [
+                        "Emergency Care",
+                        "Trauma Response",
+                        "First Aid"
+                    ]
+                },
+                {
+                    "name": "Medical Documentation",
+                    "aliases": [
+                        "Clinical Documentation",
+                        "EMR Documentation",
+                        "Patient Documentation",
+                        "Charting",
+                        "Medical Records Updates"
+                    ]
+                }
+            ]
+        },
+        "Diagnostics & Procedures": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "Phlebotomy",
+                    "aliases": [
+                        "Blood Draw",
+                        "Venipuncture"
+                    ]
+                },
+                {
+                    "name": "Specimen Collection",
+                    "aliases": [
+                        "Sample Collection",
+                        "Swabbing"
+                    ]
+                },
+                {
+                    "name": "Laboratory Testing",
+                    "aliases": [
+                        "Lab Tests",
+                        "Clinical Laboratory diagnostics"
+                    ]
+                },
+                {
+                    "name": "Vital Signs Monitoring",
+                    "aliases": [
+                        "Taking Vitals",
+                        "Patient Monitoring",
+                        "Blood Pressure Monitoring"
+                    ]
+                },
+                {
+                    "name": "Medical Imaging",
+                    "aliases": [
+                        "Imaging diagnostics"
+                    ]
+                },
+                {
+                    "name": "Radiology",
+                    "aliases": [
+                        "X-Ray",
+                        "CT Scan",
+                        "MRI"
+                    ]
+                },
+                {
+                    "name": "Electrocardiography",
+                    "aliases": [
+                        "ECG",
+                        "EKG"
+                    ]
+                },
+                {
+                    "name": "Ultrasound",
+                    "aliases": [
+                        "Sonography"
+                    ]
+                },
+                {
+                    "name": "Diagnostic Interpretation",
+                    "aliases": [
+                        "Test Result Analysis",
+                        "Interpreting Labs"
+                    ]
+                },
+                {
+                    "name": "Pathology",
+                    "aliases": []
+                }
+            ]
+        },
+        "Medical Specializations": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "Cardiology",
+                    "aliases": [
+                        "Cardiac Care"
+                    ]
+                },
+                {
+                    "name": "Neurology",
+                    "aliases": [
+                        "Neurological Care"
+                    ]
+                },
+                {
+                    "name": "Pediatrics",
+                    "aliases": [
+                        "Pediatric Care",
+                        "Child Healthcare"
+                    ]
+                },
+                {
+                    "name": "Orthopedics",
+                    "aliases": [
+                        "Orthopaedic Care"
+                    ]
+                },
+                {
+                    "name": "Oncology",
+                    "aliases": [
+                        "Cancer Care"
+                    ]
+                },
+                {
+                    "name": "Dermatology",
+                    "aliases": []
+                },
+                {
+                    "name": "Gynecology",
+                    "aliases": [
+                        "OB/GYN",
+                        "Obstetrics"
+                    ]
+                },
+                {
+                    "name": "Internal Medicine",
+                    "aliases": []
+                },
+                {
+                    "name": "Surgical Assistance",
+                    "aliases": [
+                        "Scrubbing In",
+                        "Operating Room Assistance",
+                        "Perioperative Care"
+                    ]
+                },
+                {
+                    "name": "Anesthesiology",
+                    "aliases": [
+                        "Anesthesia Administration"
+                    ]
+                }
+            ]
+        },
+        "Pharmaceutical & Therapeutics": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "Pharmacology",
+                    "aliases": []
+                },
+                {
+                    "name": "Medication Administration",
+                    "aliases": [
+                        "Administering Medications",
+                        "Drug Administration"
+                    ]
+                },
+                {
+                    "name": "Drug Interaction Monitoring",
+                    "aliases": [
+                        "Adverse Reaction Monitoring"
+                    ]
+                },
+                {
+                    "name": "Prescription Management",
+                    "aliases": [
+                        "Refill Authorization"
+                    ]
+                },
+                {
+                    "name": "IV Therapy",
+                    "aliases": [
+                        "Intravenous Therapy",
+                        "IV Administration"
+                    ]
+                },
+                {
+                    "name": "Therapeutic Procedures",
+                    "aliases": [
+                        "Physical Therapy",
+                        "Occupational Therapy"
+                    ]
+                }
+            ]
+        },
+        "Healthcare Technology & Informatics": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "EHR",
+                    "aliases": [
+                        "EMR",
+                        "Electronic Health Records",
+                        "Electronic Medical Records",
+                        "Epic",
+                        "Cerner"
+                    ]
+                },
+                {
+                    "name": "Hospital Information Systems",
+                    "aliases": [
+                        "HIS",
+                        "Clinical Information Systems"
+                    ]
+                },
+                {
+                    "name": "Health Informatics",
+                    "aliases": [
+                        "Medical Informatics"
+                    ]
+                },
+                {
+                    "name": "Clinical Data Management",
+                    "aliases": [
+                        "Data Entry in Healthcare"
+                    ]
+                },
+                {
+                    "name": "Telemedicine",
+                    "aliases": [
+                        "Telehealth",
+                        "Virtual Care"
+                    ]
+                },
+                {
+                    "name": "Digital Health",
+                    "aliases": []
+                },
+                {
+                    "name": "Medical Coding",
+                    "aliases": [
+                        "Clinical Coding"
+                    ]
+                },
+                {
+                    "name": "ICD Coding",
+                    "aliases": [
+                        "ICD-10"
+                    ]
+                },
+                {
+                    "name": "CPT Coding",
+                    "aliases": []
+                }
+            ]
+        },
+        "Regulatory & Compliance": {
+            "weight": 1.5,
+            "skills": [
+                {
+                    "name": "HIPAA Compliance",
+                    "aliases": [
+                        "HIPAA",
+                        "HIPAA Regulations",
+                        "Patient Privacy Compliance",
+                        "Health Insurance Portability and Accountability Act"
+                    ]
+                },
+                {
+                    "name": "Healthcare Regulations",
+                    "aliases": [
+                        "Medical Compliance"
+                    ]
+                },
+                {
+                    "name": "Patient Confidentiality",
+                    "aliases": [
+                        "Data Privacy Protection"
+                    ]
+                },
+                {
+                    "name": "Safety Protocols",
+                    "aliases": [
+                        "Workplace Safety in Healthcare"
+                    ]
+                },
+                {
+                    "name": "Infection Control",
+                    "aliases": [
+                        "Infection Prevention",
+                        "Sterilization Procedures",
+                        "Aseptic Techniques",
+                        "Sanitization"
+                    ]
+                },
+                {
+                    "name": "Quality Assurance",
+                    "aliases": [
+                        "QA",
+                        "Care Quality"
+                    ]
+                },
+                {
+                    "name": "Clinical Audits",
+                    "aliases": [
+                        "Medical Auditing"
+                    ]
+                },
+                {
+                    "name": "Risk Management",
+                    "aliases": [
+                        "Patient Safety Incident Reporting"
+                    ]
+                }
+            ]
+        },
+        "Research & Evidence-Based Practice": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "Clinical Research",
+                    "aliases": [
+                        "Medical Research"
+                    ]
+                },
+                {
+                    "name": "Clinical Trials",
+                    "aliases": [
+                        "Trial Coordination",
+                        "Research Trials",
+                        "Study Coordination",
+                        "Investigational Studies"
+                    ]
+                },
+                {
+                    "name": "Evidence-Based Practice",
+                    "aliases": [
+                        "EBP"
+                    ]
+                },
+                {
+                    "name": "Data Collection",
+                    "aliases": [
+                        "Clinical Trial Data Entry",
+                        "Research Data Gathering"
+                    ]
+                },
+                {
+                    "name": "Biostatistics",
+                    "aliases": []
+                },
+                {
+                    "name": "Research Methodology",
+                    "aliases": []
+                },
+                {
+                    "name": "Protocol Development",
+                    "aliases": [
+                        "Clinical Trial Protocols"
+                    ]
+                }
+            ]
+        },
+        "Patient Support & Communication": {
+            "weight": 1.2,
+            "skills": [
+                {
+                    "name": "Patient Advocacy",
+                    "aliases": [
+                        "Patient Rights"
+                    ]
+                },
+                {
+                    "name": "Health Education",
+                    "aliases": [
+                        "Patient Education",
+                        "Instructional Care"
+                    ]
+                },
+                {
+                    "name": "Counseling",
+                    "aliases": [
+                        "Psychological Support",
+                        "Mental Health First Aid"
+                    ]
+                },
+                {
+                    "name": "Discharge Planning",
+                    "aliases": [
+                        "Patient Discharge Process",
+                        "Post-Hospital Care Coordination"
+                    ]
+                },
+                {
+                    "name": "Interdisciplinary Collaboration",
+                    "aliases": [
+                        "Working with Physicians",
+                        "Cross-functional Medical Teams"
+                    ]
+                },
+                {
+                    "name": "Clinical Communication",
+                    "aliases": [
+                        "Communicating Medical Information"
+                    ]
+                }
+            ]
+        },
+        "Foundational Medical Knowledge": {
+            "weight": 1.1,
+            "skills": [
+                {
+                    "name": "Anatomy",
+                    "aliases": [
+                        "Human Anatomy"
+                    ]
+                },
+                {
+                    "name": "Physiology",
+                    "aliases": [
+                        "Human Physiology"
+                    ]
+                },
+                {
+                    "name": "Medical Terminology",
+                    "aliases": [
+                        "Clinical Vocabulary"
+                    ]
+                },
+                {
+                    "name": "Pathophysiology",
+                    "aliases": []
+                },
+                {
+                    "name": "Microbiology",
+                    "aliases": []
+                },
+                {
+                    "name": "Biochemistry",
+                    "aliases": []
+                }
+            ]
+        }
+    }
 }

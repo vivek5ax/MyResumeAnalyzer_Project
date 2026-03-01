@@ -640,6 +640,21 @@ textarea.modern-input:focus {
     gap: 0.75rem;
 }
 
+/* Custom scrollbar for skill cards */
+.skills-list::-webkit-scrollbar {
+    width: 6px;
+}
+.skills-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.skills-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 10px;
+}
+.skills-list::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
 .skill-tag {
     padding: 0.5rem 1rem;
     border-radius: 8px;

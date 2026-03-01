@@ -1,22 +1,160 @@
 {
-    "Soft Skills": {
-        "weight": 1.0,
-        "skills": [
-            "Communication",
-            "Leadership",
-            "Problem Solving",
-            "Critical Thinking",
-            "Teamwork",
-            "Adaptability",
-            "Time Management",
-            "Decision Making",
-            "Collaboration",
-            "Creativity",
-            "Emotional Intelligence",
-            "Conflict Resolution",
-            "Public Speaking",
-            "Research",
-            "Analytical Skills"
+    "_meta": {
+        "domain": "soft_skills",
+        "version": "3.0-production-ready",
+        "last_updated": "2026-02-28",
+        "design_notes": [
+            "Overlapping skills consolidated",
+            "Hard-skill aliases removed",
+            "Soft skills grouped into competency clusters",
+            "Category weight reduced to prevent inflation in overall alignment"
         ]
+    },
+    "categories": {
+        "Communication & Influence": {
+            "weight": 0.6,
+            "skills": [
+                {
+                    "name": "Communication",
+                    "aliases": [
+                        "Verbal Communication",
+                        "Written Communication",
+                        "Clear Communication",
+                        "Professional Communication"
+                    ]
+                },
+                {
+                    "name": "Presentation Skills",
+                    "aliases": [
+                        "Public Speaking",
+                        "Presentations",
+                        "Delivered Presentations"
+                    ]
+                },
+                {
+                    "name": "Negotiation",
+                    "aliases": [
+                        "Negotiation Skills",
+                        "Stakeholder Negotiation"
+                    ]
+                }
+            ]
+        },
+        "Leadership & Ownership": {
+            "weight": 0.7,
+            "skills": [
+                {
+                    "name": "Leadership",
+                    "aliases": [
+                        "Team Leadership",
+                        "Led Team",
+                        "Led Cross-Functional Team",
+                        "Technical Leadership"
+                    ]
+                },
+                {
+                    "name": "Decision Making",
+                    "aliases": [
+                        "Strategic Decisions",
+                        "Sound Judgment",
+                        "Executive Decision Making"
+                    ]
+                },
+                {
+                    "name": "Mentorship",
+                    "aliases": [
+                        "Coaching",
+                        "Guided Team Members",
+                        "Team Mentoring"
+                    ]
+                }
+            ]
+        },
+        "Collaboration & Interpersonal": {
+            "weight": 0.6,
+            "skills": [
+                {
+                    "name": "Teamwork",
+                    "aliases": [
+                        "Collaboration",
+                        "Collaborated With",
+                        "Cross-Functional Collaboration",
+                        "Team Player"
+                    ]
+                },
+                {
+                    "name": "Conflict Resolution",
+                    "aliases": [
+                        "Resolved Conflicts",
+                        "Mediation",
+                        "Handled Disputes"
+                    ]
+                },
+                {
+                    "name": "Emotional Intelligence",
+                    "aliases": [
+                        "Empathy",
+                        "Interpersonal Awareness",
+                        "Relationship Management"
+                    ]
+                }
+            ]
+        },
+        "Problem Solving & Critical Thinking": {
+            "weight": 0.7,
+            "skills": [
+                {
+                    "name": "Problem Solving",
+                    "aliases": [
+                        "Problem-Solving",
+                        "Troubleshooting",
+                        "Resolved Issues",
+                        "Root Cause Analysis"
+                    ]
+                },
+                {
+                    "name": "Critical Thinking",
+                    "aliases": [
+                        "Analytical Thinking",
+                        "Logical Thinking",
+                        "Strategic Thinking"
+                    ]
+                }
+            ]
+        },
+        "Execution & Adaptability": {
+            "weight": 0.6,
+            "skills": [
+                {
+                    "name": "Time Management",
+                    "aliases": [
+                        "Prioritization",
+                        "Managed Deadlines",
+                        "Organizational Skills"
+                    ]
+                },
+                {
+                    "name": "Adaptability",
+                    "aliases": [
+                        "Flexibility",
+                        "Adapted to Change",
+                        "Agility"
+                    ]
+                }
+            ]
+        },
+        "Creativity & Innovation": {
+            "weight": 0.6,
+            "skills": [
+                {
+                    "name": "Creativity",
+                    "aliases": [
+                        "Innovation",
+                        "Creative Thinking",
+                        "Innovative Solutions"
+                    ]
+                }
+            ]
+        }
     }
 }

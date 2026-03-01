@@ -1,42 +1,376 @@
 {
-    "Circuit Design & Hardware": {
-        "weight": 1.4,
-        "skills": [
-            "Circuit Analysis",
-            "PCB Design",
-            "Schematic Capture",
-            "Altium Designer",
-            "KiCad",
-            "AutoCAD Civil 3D",
-            "Microcontrollers",
-            "FPGA",
-            "VHDL",
-            "Verilog"
-        ]
+    "_meta": {
+        "domain": "electrical",
+        "version": "3.0-production-enhanced",
+        "last_updated": "2026-02-28"
     },
-    "Power & Energy": {
-        "weight": 1.3,
-        "skills": [
-            "Power Systems",
-            "Electrical Wiring",
-            "High Voltage",
-            "Renewable Energy",
-            "Smart Grids",
-            "Transformers",
-            "PLC Programming",
-            "SCADA"
-        ]
-    },
-    "Control Systems": {
-        "weight": 1.2,
-        "skills": [
-            "Control Theory",
-            "Signal Processing",
-            "MATLAB",
-            "Simulink",
-            "Embedded Systems",
-            "Automation",
-            "Robotics"
-        ]
+    "categories": {
+        "Circuit Design & Hardware": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "Circuit Analysis",
+                    "aliases": [
+                        "Analog Circuit Analysis",
+                        "Electrical Circuit Analysis"
+                    ]
+                },
+                {
+                    "name": "PCB Design",
+                    "aliases": [
+                        "Printed Circuit Board Design",
+                        "PCB Layout"
+                    ]
+                },
+                {
+                    "name": "Schematic Capture",
+                    "aliases": [
+                        "Schematic Design",
+                        "Electrical Schematics"
+                    ]
+                },
+                {
+                    "name": "Hardware Debugging",
+                    "aliases": [
+                        "Board Debugging",
+                        "Hardware Troubleshooting"
+                    ]
+                },
+                {
+                    "name": "Altium Designer",
+                    "aliases": [
+                        "Altium"
+                    ]
+                },
+                {
+                    "name": "KiCad",
+                    "aliases": []
+                },
+                {
+                    "name": "OrCAD",
+                    "aliases": []
+                },
+                {
+                    "name": "AutoCAD Electrical",
+                    "aliases": [
+                        "AutoCAD",
+                        "Electrical CAD"
+                    ]
+                },
+                {
+                    "name": "Microcontrollers",
+                    "aliases": [
+                        "MCU",
+                        "Microprocessor"
+                    ]
+                },
+                {
+                    "name": "FPGA",
+                    "aliases": [
+                        "Field Programmable Gate Array"
+                    ]
+                },
+                {
+                    "name": "VHDL",
+                    "aliases": []
+                },
+                {
+                    "name": "Verilog",
+                    "aliases": [
+                        "SystemVerilog"
+                    ]
+                },
+                {
+                    "name": "Power Electronics",
+                    "aliases": [
+                        "Inverters",
+                        "Converters"
+                    ]
+                },
+                {
+                    "name": "Embedded Systems",
+                    "aliases": [
+                        "Embedded C",
+                        "Embedded Software"
+                    ]
+                }
+            ]
+        },
+        "Power & Energy": {
+            "weight": 1.5,
+            "skills": [
+                {
+                    "name": "Power Systems",
+                    "aliases": [
+                        "Power Distribution",
+                        "Electrical Distribution Systems"
+                    ]
+                },
+                {
+                    "name": "Load Flow Analysis",
+                    "aliases": [
+                        "Power Flow Analysis"
+                    ]
+                },
+                {
+                    "name": "Short Circuit Analysis",
+                    "aliases": [
+                        "Fault Current Analysis"
+                    ]
+                },
+                {
+                    "name": "Fault Analysis",
+                    "aliases": [
+                        "Electrical Fault Analysis"
+                    ]
+                },
+                {
+                    "name": "Protection Relay Coordination",
+                    "aliases": [
+                        "Relay Coordination"
+                    ]
+                },
+                {
+                    "name": "Transformer Design",
+                    "aliases": [
+                        "Transformer Engineering"
+                    ]
+                },
+                {
+                    "name": "Transformers",
+                    "aliases": []
+                },
+                {
+                    "name": "High Voltage",
+                    "aliases": [
+                        "HV",
+                        "High-Voltage Systems"
+                    ]
+                },
+                {
+                    "name": "Substation Design",
+                    "aliases": [
+                        "Electrical Substation"
+                    ]
+                },
+                {
+                    "name": "Switchgear",
+                    "aliases": []
+                },
+                {
+                    "name": "Electrical Wiring",
+                    "aliases": [
+                        "Wiring",
+                        "Cable Routing"
+                    ]
+                },
+                {
+                    "name": "Grounding Systems",
+                    "aliases": [
+                        "Earthing"
+                    ]
+                },
+                {
+                    "name": "Electrical Safety Standards",
+                    "aliases": [
+                        "IEC Standards",
+                        "IEEE Standards",
+                        "NFPA 70"
+                    ]
+                },
+                {
+                    "name": "Renewable Energy",
+                    "aliases": [
+                        "Solar",
+                        "Wind Power",
+                        "Photovoltaic Systems"
+                    ]
+                },
+                {
+                    "name": "Smart Grids",
+                    "aliases": [
+                        "Grid Automation"
+                    ]
+                },
+                {
+                    "name": "ETAP",
+                    "aliases": []
+                },
+                {
+                    "name": "DIgSILENT PowerFactory",
+                    "aliases": [
+                        "PowerFactory"
+                    ]
+                },
+                {
+                    "name": "PSCAD",
+                    "aliases": []
+                }
+            ]
+        },
+        "Control Systems & Automation": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "PLC Programming",
+                    "aliases": [
+                        "Programmable Logic Controller",
+                        "PLC"
+                    ]
+                },
+                {
+                    "name": "SCADA",
+                    "aliases": [
+                        "Supervisory Control and Data Acquisition"
+                    ]
+                },
+                {
+                    "name": "Control Theory",
+                    "aliases": []
+                },
+                {
+                    "name": "Control Systems",
+                    "aliases": [
+                        "Industrial Control Systems"
+                    ]
+                },
+                {
+                    "name": "Signal Processing",
+                    "aliases": [
+                        "Digital Signal Processing",
+                        "DSP"
+                    ]
+                },
+                {
+                    "name": "MATLAB",
+                    "aliases": []
+                },
+                {
+                    "name": "Simulink",
+                    "aliases": []
+                },
+                {
+                    "name": "Automation",
+                    "aliases": [
+                        "Industrial Automation"
+                    ]
+                },
+                {
+                    "name": "Robotics",
+                    "aliases": []
+                },
+                {
+                    "name": "Instrumentation",
+                    "aliases": [
+                        "Industrial Instrumentation"
+                    ]
+                },
+                {
+                    "name": "HMI Design",
+                    "aliases": [
+                        "Human Machine Interface"
+                    ]
+                },
+                {
+                    "name": "DCS",
+                    "aliases": [
+                        "Distributed Control System"
+                    ]
+                }
+            ]
+        },
+        "Testing & Maintenance": {
+            "weight": 1.2,
+            "skills": [
+                {
+                    "name": "Preventive Maintenance",
+                    "aliases": []
+                },
+                {
+                    "name": "Predictive Maintenance",
+                    "aliases": []
+                },
+                {
+                    "name": "Troubleshooting",
+                    "aliases": [
+                        "Electrical Troubleshooting"
+                    ]
+                },
+                {
+                    "name": "Commissioning",
+                    "aliases": [
+                        "System Commissioning"
+                    ]
+                },
+                {
+                    "name": "System Testing",
+                    "aliases": [
+                        "Electrical Testing"
+                    ]
+                },
+                {
+                    "name": "Root Cause Analysis",
+                    "aliases": [
+                        "RCA"
+                    ]
+                }
+            ]
+        },
+        "Software & Simulation Tools": {
+            "weight": 1.1,
+            "skills": [
+                {
+                    "name": "Python",
+                    "aliases": []
+                },
+                {
+                    "name": "C Programming",
+                    "aliases": [
+                        "Embedded C"
+                    ]
+                },
+                {
+                    "name": "LabVIEW",
+                    "aliases": []
+                },
+                {
+                    "name": "ANSYS",
+                    "aliases": []
+                },
+                {
+                    "name": "COMSOL",
+                    "aliases": []
+                }
+            ]
+        },
+        "Professional & Soft Skills": {
+            "weight": 0.8,
+            "skills": [
+                {
+                    "name": "Problem Solving",
+                    "aliases": []
+                },
+                {
+                    "name": "Technical Documentation",
+                    "aliases": [
+                        "Documentation"
+                    ]
+                },
+                {
+                    "name": "Project Management",
+                    "aliases": []
+                },
+                {
+                    "name": "Team Collaboration",
+                    "aliases": [
+                        "Cross-functional Collaboration"
+                    ]
+                },
+                {
+                    "name": "Communication Skills",
+                    "aliases": []
+                }
+            ]
+        }
     }
 }

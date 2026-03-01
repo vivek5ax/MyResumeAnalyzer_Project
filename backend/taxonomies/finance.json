@@ -1,0 +1,174 @@
+{
+    "_meta": {
+        "domain": "finance",
+        "version": "3.0-alias-enhanced",
+        "last_updated": "2024-03-01"
+    },
+    "categories": {
+        "Financial Analysis & Modeling": {
+            "weight": 1.5,
+            "skills": [
+                {
+                    "name": "Financial Modeling",
+                    "aliases": [
+                        "DCF Modeling",
+                        "LBO Modeling",
+                        "M&A Modeling",
+                        "3-Statement Modeling",
+                        "Valuation Modeling"
+                    ]
+                },
+                {
+                    "name": "Financial Analysis",
+                    "aliases": [
+                        "Variance Analysis",
+                        "FP&A",
+                        "Financial Planning & Analysis",
+                        "Ratio Analysis",
+                        "Trend Analysis"
+                    ]
+                },
+                {
+                    "name": "Corporate Finance",
+                    "aliases": [
+                        "Capital Budgeting",
+                        "Capital Restructuring",
+                        "Cost of Capital",
+                        "WACC"
+                    ]
+                },
+                {
+                    "name": "Risk Management",
+                    "aliases": [
+                        "Credit Risk",
+                        "Market Risk",
+                        "Operational Risk",
+                        "Liquidity Risk",
+                        "Enterprise Risk Management",
+                        "ERM"
+                    ]
+                }
+            ]
+        },
+        "Banking & Investment": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "Investment Banking",
+                    "aliases": [
+                        "M&A Advisory",
+                        "Equity Capital Markets",
+                        "ECM",
+                        "Debt Capital Markets",
+                        "DCM"
+                    ]
+                },
+                {
+                    "name": "Portfolio Management",
+                    "aliases": [
+                        "Asset Allocation",
+                        "Investment Strategy",
+                        "Wealth Management",
+                        "Fund Management"
+                    ]
+                },
+                {
+                    "name": "Private Equity",
+                    "aliases": [
+                        "Venture Capital",
+                        "Deal Sourcing",
+                        "Due Diligence",
+                        "Buyouts"
+                    ]
+                },
+                {
+                    "name": "Retail & Commercial Banking",
+                    "aliases": [
+                        "Underwriting",
+                        "Loan Origination",
+                        "Credit Analysis",
+                        "Treasury Management"
+                    ]
+                }
+            ]
+        },
+        "Accounting & Compliance": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "Financial Reporting",
+                    "aliases": [
+                        "GAAP",
+                        "IFRS",
+                        "SEC Reporting",
+                        "10-K",
+                        "10-Q",
+                        "Consolidated Financials"
+                    ]
+                },
+                {
+                    "name": "Auditing",
+                    "aliases": [
+                        "Internal Audit",
+                        "External Audit",
+                        "SOX Compliance",
+                        "Sarbanes-Oxley"
+                    ]
+                },
+                {
+                    "name": "Taxation",
+                    "aliases": [
+                        "Corporate Tax",
+                        "Tax Planning",
+                        "Transfer Pricing",
+                        "Tax Compliance"
+                    ]
+                },
+                {
+                    "name": "Regulatory Compliance",
+                    "aliases": [
+                        "AML",
+                        "Anti-Money Laundering",
+                        "KYC",
+                        "Know Your Customer",
+                        "Basel III",
+                        "Dodd-Frank"
+                    ]
+                }
+            ]
+        },
+        "Financial Software & Data": {
+            "weight": 1.2,
+            "skills": [
+                {
+                    "name": "Bloomberg Terminal",
+                    "aliases": [
+                        "Bloomberg",
+                        "FactSet",
+                        "Capital IQ",
+                        "Refinitiv"
+                    ]
+                },
+                {
+                    "name": "ERP Systems",
+                    "aliases": [
+                        "SAP FICO",
+                        "Oracle Financials",
+                        "NetSuite",
+                        "Workday Financials"
+                    ]
+                },
+                {
+                    "name": "Data Analytics (Finance)",
+                    "aliases": [
+                        "Excel Analytics",
+                        "Advanced Excel",
+                        "VBA",
+                        "Power Query",
+                        "Macros"
+                    ]
+                }
+            ]
+        }
+    }
+}

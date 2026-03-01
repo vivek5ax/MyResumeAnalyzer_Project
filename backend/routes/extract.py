@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from services.validator import validate_file
 from services.parser import parse_text
-from services.preprocessor import clean_text, save_data
+from services.preprocessor import generate_versions, save_data
 from services.analyzer import extract_skills
 from services.bert_analyzer import analyze_semantic_matching
 
@@ -27,23 +27,33 @@ async def extract_content(
     if job_description_file:
         jd_raw = await parse_text(job_description_file)
 
-    # Clean text for extraction
-    resume_clean = clean_text(resume_raw)
-    jd_clean = clean_text(jd_raw)
+    # Preprocessing: Generate Multiple Text Versions
+    resume_versions = generate_versions(resume_raw)
+    jd_versions = generate_versions(jd_raw)
     
     # 1. spaCy-based extraction (Keyword-like / NER) with Domain Awareness
-    resume_skills = extract_skills(resume_clean, domain=domain)
-    jd_skills = extract_skills(jd_clean, domain=domain)
+    # SPA-CY NEEDS VERSION B (Light Clean)
+    resume_skills = extract_skills(resume_versions["light_clean_text"], domain=domain)
+    jd_skills = extract_skills(jd_versions["light_clean_text"], domain=domain)
 
     # 2. BERT-based semantic analysis with Domain Awareness
-    bert_results = analyze_semantic_matching(jd_raw, resume_raw, domain=domain, threshold=0.50)
+    jd_flat_skills = jd_skills.get("technical_skills", []) + jd_skills.get("soft_skills", [])
+    resume_flat_skills = resume_skills.get("technical_skills", []) + resume_skills.get("soft_skills", [])
+
+    bert_results = analyze_semantic_matching(
+        jd_flat_skills, 
+        resume_flat_skills,
+        resume_versions["raw_text"], 
+        domain=domain,
+        threshold=0.50
+    )
 
     # Save Data (Persistence)
     resume_name = resume.filename
     jd_name = job_description_file.filename if job_description_file else "Manual Input"
     
-    # Pass bert_results to save_data (need to update save_data signature if needed)
-    session_id = save_data(resume_raw, jd_raw, resume_name, jd_name, resume_skills, jd_skills, bert_results)
+    # Pass version dictionaries to save_data
+    session_id = save_data(resume_versions, jd_versions, resume_name, jd_name, resume_skills, jd_skills, bert_results)
     
     return {
         "status": "success",

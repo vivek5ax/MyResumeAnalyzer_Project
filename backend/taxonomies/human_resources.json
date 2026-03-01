@@ -1,0 +1,156 @@
+{
+    "_meta": {
+        "domain": "hr",
+        "version": "3.0-alias-enhanced",
+        "last_updated": "2024-03-01"
+    },
+    "categories": {
+        "Talent Acquisition & Recruiting": {
+            "weight": 1.5,
+            "skills": [
+                {
+                    "name": "Full-Cycle Recruiting",
+                    "aliases": [
+                        "Talent Acquisition",
+                        "Sourcing",
+                        "Candidate Screening",
+                        "Interviewing",
+                        "Executive Search"
+                    ]
+                },
+                {
+                    "name": "Applicant Tracking Systems",
+                    "aliases": [
+                        "ATS",
+                        "Greenhouse",
+                        "Lever",
+                        "Workday Recruiting",
+                        "Taleo"
+                    ]
+                },
+                {
+                    "name": "Employer Branding",
+                    "aliases": [
+                        "Recruitment Marketing",
+                        "Candidate Experience",
+                        "Talent Pipelining"
+                    ]
+                }
+            ]
+        },
+        "Employee Relations & Engagement": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "Employee Relations",
+                    "aliases": [
+                        "Conflict Resolution",
+                        "Grievance Handling",
+                        "Disciplinary Action",
+                        "Labor Relations",
+                        "Union Negotiations"
+                    ]
+                },
+                {
+                    "name": "Employee Engagement",
+                    "aliases": [
+                        "Culture Building",
+                        "Employee Retention",
+                        "Surveys",
+                        "eNPS",
+                        "Employee Wellbeing"
+                    ]
+                },
+                {
+                    "name": "Diversity, Equity, and Inclusion",
+                    "aliases": [
+                        "DEI",
+                        "Diversity & Inclusion",
+                        "D&I",
+                        "Belonging"
+                    ]
+                }
+            ]
+        },
+        "Compensation & Benefits": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "Compensation Strategy",
+                    "aliases": [
+                        "Total Rewards",
+                        "Salary Benchmarking",
+                        "Variable Pay",
+                        "Equity Compensation",
+                        "Merit Cycles"
+                    ]
+                },
+                {
+                    "name": "Benefits Administration",
+                    "aliases": [
+                        "Health Insurance",
+                        "Retirement Plans",
+                        "401(k) Administration",
+                        "Leaves of Absence",
+                        "FMLA"
+                    ]
+                },
+                {
+                    "name": "Payroll Processing",
+                    "aliases": [
+                        "Payroll Management",
+                        "ADP",
+                        "Paylocity",
+                        "Payroll Compliance"
+                    ]
+                }
+            ]
+        },
+        "HR Operations & Strategy": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "Performance Management",
+                    "aliases": [
+                        "Performance Reviews",
+                        "Goal Setting",
+                        "OKRs",
+                        "KPIs",
+                        "Appraisals"
+                    ]
+                },
+                {
+                    "name": "Learning and Development",
+                    "aliases": [
+                        "L&D",
+                        "Training Programs",
+                        "Onboarding",
+                        "Leadership Development",
+                        "Instructional Design"
+                    ]
+                },
+                {
+                    "name": "HR Information Systems",
+                    "aliases": [
+                        "HRIS",
+                        "HRMS",
+                        "Workday HCM",
+                        "BambooHR",
+                        "SAP SuccessFactors"
+                    ]
+                },
+                {
+                    "name": "Employment Law Compliance",
+                    "aliases": [
+                        "EEO",
+                        "OSHA",
+                        "FLSA",
+                        "ADA",
+                        "Labor Compliance",
+                        "HR Policies"
+                    ]
+                }
+            ]
+        }
+    }
+}

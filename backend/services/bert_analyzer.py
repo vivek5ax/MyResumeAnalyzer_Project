@@ -1,181 +1,298 @@
 import spacy
 import re
+import hashlib
 from sentence_transformers import SentenceTransformer, util
 import torch
-from .taxonomy_loader import load_taxonomy
+import os
+from .taxonomy_loader import load_taxonomy, BASE_PATH
+import re
 
-# Load spaCy for sentence splitting
-nlp = spacy.load("en_core_web_sm")
+# Load spaCy strictly for semantic sentence splitting boundaries
+nlp = spacy.load("en_core_web_sm", disable=["ner", "tagger", "lemmatizer", "textcat"]) # Parser needed for sentence segmenting
 
-# Load BERT model
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# Hardware Acceleration Setup
+device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+print(f"🚀 Initializing BERT Model on DEVICE: {device.upper()}")
+model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
 
-def get_taxonomy_flat(domain):
+# Global Performance Caches
+DOMAIN_SKILL_EMBEDDINGS = {}
+DOMAIN_SKILL_LIST = {}
+JD_EMBEDDING_CACHE = {}
+DOMAIN_MTIME = {}
+
+# Tunable thresholds
+DETECTION_THRESHOLD = 0.55
+STRONG_SIMILARITY_THRESHOLD = 0.72
+MODERATE_SIMILARITY_THRESHOLD = 0.60
+
+
+def get_domain_embeddings(domain: str):
     """
-    Loads taxonomy and flattens it for BERT embedding generation.
+    Computes and caches Canonical Taxonomy embeddings massively improving runtime.
+    Auto-invalidates if taxonomy JSON files are modified.
     """
-    taxonomy = load_taxonomy(domain)
-    flat_skills = []
-    for category_details in taxonomy.values():
-        flat_skills.extend(category_details.get("skills", []))
+    domain_clean = re.sub(r'[^a-z0-9_]', '', domain.lower().replace(' ', '_'))
+    domain_path = os.path.join(BASE_PATH, f"{domain_clean}.json")
+    soft_path = os.path.join(BASE_PATH, "soft_skills.json")
     
-    return sorted(list(set(flat_skills)))
-
-def extract_bert_skills(text, domain="software", threshold=0.50):
-    """
-    Extracts skills by comparing segments of text to a domain-specific taxonomy using BERT.
-    """
-    if not text:
-        return []
-
-    # 1. Load domain-specific taxonomy
-    flat_taxonomy = get_taxonomy_flat(domain)
-    if not flat_taxonomy:
-        return []
-    
-    skill_embeddings = model.encode(flat_taxonomy, convert_to_tensor=True, normalize_embeddings=True)
-    
-    # 2. Split into segments
-    raw_segments = []
-    doc = nlp(text)
-    for sent in doc.sents:
-        # Split by comma, bullet points, pipes, etc.
-        sub_segments = re.split(r'[,|•\n\t]|(?<=\s)-(?=\s)', sent.text)
-        raw_segments.extend([s.strip() for s in sub_segments if len(s.strip()) > 1])
-    
-    # Filter out long sentences, keep only potential skill phrases
-    segments = sorted(list(set(s for s in raw_segments if len(s) < 100)))
-    
-    if not segments:
-        return []
+    current_mtime = 0
+    if os.path.exists(domain_path):
+        current_mtime += os.path.getmtime(domain_path)
+    if os.path.exists(soft_path):
+        current_mtime += os.path.getmtime(soft_path)
         
-    # 3. Encode segments
-    segment_embeddings = model.encode(segments, convert_to_tensor=True, normalize_embeddings=True)
+    if domain in DOMAIN_SKILL_EMBEDDINGS and DOMAIN_MTIME.get(domain) == current_mtime:
+        return DOMAIN_SKILL_LIST[domain], DOMAIN_SKILL_EMBEDDINGS[domain]
+        
+    print(f"⚙️ Building Vector Embeddings for Taxonomy Domain: {domain}")
     
-    # 4. Compute Cosine Similarity
-    cosine_scores = util.cos_sim(segment_embeddings, skill_embeddings)
+    # 1. Load taxonomy and rely entirely on structured skills_flat
+    taxonomy_data = load_taxonomy(domain)
+    skills_flat = taxonomy_data["skills_flat"]
     
-    matched_skills = set()
+    # Generate canonical list
+    canonical_skills = sorted(list(skills_flat.keys()))
     
-    # 5. Find matches exceeding threshold
-    for i, segment in enumerate(segments):
-        scores = cosine_scores[i]
-        match_indices = torch.where(scores >= threshold)[0]
-        for idx in match_indices:
-            skill = flat_taxonomy[idx.item()]
-            matched_skills.add(skill)
-            
-    return sorted(list(matched_skills))
+    # Batch Encode
+    embeddings = model.encode(canonical_skills, convert_to_tensor=True, normalize_embeddings=True, device=device)
+    
+    # Cache
+    DOMAIN_SKILL_LIST[domain] = canonical_skills
+    DOMAIN_SKILL_EMBEDDINGS[domain] = embeddings
+    DOMAIN_MTIME[domain] = current_mtime
+    
+    return canonical_skills, embeddings
 
-def verify_skill_presence(skill_name, text):
+
+def sanitize_resume_text(text: str) -> str:
     """
-    Sub-utility to check if a skill or its obvious variants exist as text in the content.
-    This prevents BERT from 'hallucinating' skills based on related concepts.
+    Prevents BERT Fallback from parsing contaminated JD extraction blocks.
     """
-    text_lower = text.lower()
-    skill_lower = skill_name.lower()
+    leakage_markers = [
+        "expected skill extraction",
+        "jd skills detected",
+        "extracted jd skills",
+        "resume analyzer results"
+    ]
     
-    # Direct check with word boundaries for short strings (e.g., "C", "SQL")
-    if len(skill_lower) <= 3:
-        if re.search(rf'\b{re.escape(skill_lower)}\b', text_lower):
-            return True
-    else:
-        # For longer strings, check for substring but be wary of nested words
-        if skill_lower in text_lower:
-            return True
-            
-    # Comprehensive alias mapping for common technical terms
-    aliases = {
-        "C#": ["csharp", "c-sharp", ".net"],
-        "C++": ["cpp", "c plus plus"],
-        "React": ["reactjs", "react.js"],
-        "Node.js": ["nodejs", "node.js"],
-        "Next.js": ["nextjs", "next.js"],
-        "Vue.js": ["vuejs", "vue.js"],
-        "JavaScript": ["js", "es6", "javascript"],
-        "TypeScript": ["ts", "typescript"],
-        "Machine Learning": ["ml", "machine learning"],
-        "Natural Language Processing": ["nlp", "natural language processing"],
-        "Large Language Models": ["llm", "llms"],
-        "Artificial Intelligence": ["ai"],
-        "AWS": ["amazon web services", "aws"],
-        "GCP": ["google cloud", "gcp"],
-        "Azure": ["microsoft azure", "azure"],
-        "CI/CD": ["cicd", "continuous integration", "continuous deployment"],
-        "Docker": ["containerization", "docker"],
-        "Kubernetes": ["k8s", "kubernetes"],
-        "SQL": ["database", "mysql", "postgresql", "sql"],
-        "REST API": ["restful", "api integration", "rest api"]
+    lower_text = text.lower()
+    for marker in leakage_markers:
+        if marker in lower_text:
+            split_index = lower_text.index(marker)
+            return text[:split_index]
+    return text
+
+
+def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, resume_text: str, domain: str = "software", threshold: float = 0.50):
+    """
+    Advanced semantic partitioning analysis comparing JD Requirements vs Resume Profile.
+    Outputs strict analytical categorization for UI consumption.
+    """
+    print(f"\n--- Starting Advanced Semantic BERT Classification [Domain: {domain}] ---")
+    
+    resume_text = sanitize_resume_text(resume_text)
+    
+    taxonomy_data = load_taxonomy(domain)
+    skills_flat = taxonomy_data["skills_flat"]
+    
+    jd_skills = [s.lower() for s in raw_jd_displays]
+    jd_embeddings = model.encode(jd_skills, convert_to_tensor=True, normalize_embeddings=True, device=device) if jd_skills else None
+    
+    resume_skills = [s.lower() for s in raw_resume_displays]
+    
+    # Output structure
+    partition = {
+        "exact_match": [],
+        "strong_semantic": [],
+        "moderate_semantic": [],
+        "irrelevant": []
     }
     
-    if skill_name in aliases:
-        for alias in aliases[skill_name]:
-            if alias.lower() in text_lower:
-                return True
-                
-    return False
-
-def analyze_semantic_matching(jd_text, resume_text, domain="software", threshold=0.50):
-    """
-    Performs domain-aware semantic analysis between Resume and JD.
-    """
-    print(f"\n--- Starting BERT Skill Classification [Domain: {domain}] ---")
+    missing_from_resume = []
     
-    # Step 1: Extract skills from both (Taxonomy-based extraction)
-    raw_jd_skills = extract_bert_skills(jd_text, domain, threshold)
-    raw_resume_skills = extract_bert_skills(resume_text, domain, threshold)
-    
-    # Step 2: Strict textual verification to eliminate hallucinations
-    jd_skills = [s for s in raw_jd_skills if verify_skill_presence(s, jd_text)]
-    resume_skills = [s for s in raw_resume_skills if verify_skill_presence(s, resume_text)]
-    
-    if not jd_skills:
-        print("⚠️ No JD skills identified.")
+    # Short circuit if JD is literally empty of skills
+    if jd_embeddings is None or len(jd_skills) == 0:
+        partition["irrelevant"] = raw_resume_displays
         return {
-            "exact_match": [],
-            "partial_match": [],
-            "irrelevant": resume_skills,
-            "jd_bert_skills": [],
-            "resume_bert_skills": resume_skills
+             "summary": {
+                "total_jd_skills": 0,
+                "resume_detected_skills": len(resume_skills),
+                "exact_match_count": 0,
+                "semantic_match_count": 0,
+                "missing_skills_count": 0,
+                "overall_alignment_score": 0.0
+            },
+            "skill_partition": partition,
+            "missing_from_resume": [],
+            "extra_resume_skills": raw_resume_displays,
+            "jd_skill_clusters": {},
+            "resume_skill_clusters": {}
         }
 
-    # Step 3: Compare Resume Skills against JD Skills using BERT
-    jd_embeddings = model.encode(jd_skills, convert_to_tensor=True, normalize_embeddings=True)
-    resume_embeddings = model.encode(resume_skills, convert_to_tensor=True, normalize_embeddings=True)
+    # Evaluate Extracted Resume Skills
+    resume_embeddings = model.encode(resume_skills, convert_to_tensor=True, normalize_embeddings=True, device=device) if resume_skills else None
     
-    similarity_matrix = util.cos_sim(resume_embeddings, jd_embeddings)
-    
-    exact_match = []
-    partial_match = []
-    irrelevant = []
-    
-    # Step 4: Logic-based Classification
-    for i, r_skill in enumerate(resume_skills):
-        # 1. Exact Match Check (case-insensitive)
-        found_exact = False
-        for j, j_skill in enumerate(jd_skills):
-            if r_skill.lower() == j_skill.lower():
-                exact_match.append(r_skill)
-                found_exact = True
-                break
+    if resume_embeddings is not None and len(resume_skills) > 0:
+        similarity_matrix = util.cos_sim(resume_embeddings, jd_embeddings)
         
-        if found_exact:
-            continue
+        for i, r_skill in enumerate(resume_skills):
+            display_r = raw_resume_displays[i]
             
-        # 2. Partial Match Check (Conceptual Similarity)
-        max_sim = torch.max(similarity_matrix[i]).item()
-        
-        if max_sim >= 0.65: # Threshold for semantic overlap
-            partial_match.append(r_skill)
-        else:
-            irrelevant.append(r_skill)
+            # Exact match short circuit WITH explicit raw text validation
+            if r_skill in jd_skills:
+                if re.search(rf'\b{re.escape(r_skill)}\b', resume_text.lower()):
+                    partition["exact_match"].append(display_r)
+                    continue
+                
+            # Semantic Thresholding
+            max_sim_val, max_sim_idx = torch.max(similarity_matrix[i], dim=0)
+            max_sim = max_sim_val.item()
+            best_jd_match_display = raw_jd_displays[max_sim_idx.item()]
             
-    print(f"✅ Classification logic applied successfully.")
+            token_len = len(r_skill.split())
+            if token_len <= 2:
+                strong_adj = STRONG_SIMILARITY_THRESHOLD - 0.05
+                moderate_adj = MODERATE_SIMILARITY_THRESHOLD - 0.05
+            else:
+                strong_adj = STRONG_SIMILARITY_THRESHOLD
+                moderate_adj = MODERATE_SIMILARITY_THRESHOLD
+                
+            aliases_map = taxonomy_data.get("aliases_map", {})
+            if r_skill in aliases_map:
+                max_sim += 0.05
+            
+            if max_sim >= strong_adj:
+                partition["strong_semantic"].append({
+                    "skill": display_r,
+                    "similar_to": best_jd_match_display,
+                    "score": round(max_sim, 2)
+                })
+            elif max_sim >= moderate_adj:
+                partition["moderate_semantic"].append({
+                     "skill": display_r,
+                     "similar_to": best_jd_match_display,
+                     "score": round(max_sim, 2)
+                })
+            else:
+                partition["irrelevant"].append(display_r)
     
+    matched_jd_lowered = set([s.lower() for s in partition["exact_match"]])
+    for d in partition["strong_semantic"]:
+       matched_jd_lowered.add(d["similar_to"].lower())
+
+    # Fallback to Raw Text Analysis for Missing JD Skills
+    missing_candidates = [display for display in raw_jd_displays if display.lower() not in matched_jd_lowered]
+    
+    if missing_candidates:
+        resume_segments = []
+        if resume_text.strip():
+            doc = nlp(resume_text)
+            for sent in doc.sents:
+                segment = sent.text.strip()
+                if 3 <= len(segment.split()) <= 40:
+                    resume_segments.append(segment)
+                    
+        if resume_segments:
+            segment_embeddings = model.encode(resume_segments, convert_to_tensor=True, normalize_embeddings=True, device=device)
+            candidate_embeddings = model.encode([c.lower() for c in missing_candidates], convert_to_tensor=True, normalize_embeddings=True, device=device)
+            
+            sim_matrix = util.cos_sim(segment_embeddings, candidate_embeddings)
+            
+            for i, candidate in enumerate(missing_candidates):
+                candidate_lower = candidate.lower()
+                
+                # Regex Check
+                has_exact = False
+                skill_info = skills_flat.get(candidate_lower, {})
+                canonical_display = skill_info.get("display", candidate).lower()
+                if len(canonical_display) <= 3:
+                    if re.search(rf'\b{re.escape(canonical_display)}\b', resume_text.lower()):
+                        has_exact = True
+                else:
+                    if canonical_display in resume_text.lower():
+                        has_exact = True
+                
+                max_sim_val, _ = torch.max(sim_matrix[:, i], dim=0)
+                max_sim = max_sim_val.item()
+                
+                if has_exact:
+                    partition["exact_match"].append(candidate)
+                    matched_jd_lowered.add(candidate_lower)
+                elif max_sim >= STRONG_SIMILARITY_THRESHOLD and has_exact:
+                    partition["strong_semantic"].append({
+                        "skill": candidate,
+                        "similar_to": candidate,
+                        "score": round(max_sim, 2)
+                    })
+                    matched_jd_lowered.add(candidate_lower)
+
+    # Compute Missing Skills correctly
+    for j_display in raw_jd_displays:
+        if j_display.lower() not in matched_jd_lowered:
+            canon_j = j_display.lower()
+            info = skills_flat.get(canon_j, {})
+            missing_from_resume.append({
+                "skill": j_display,
+                "weight": info.get("max_weight", 1.0),
+                "categories": info.get("categories", ["Unknown"])
+            })
+            
+    missing_from_resume.sort(key=lambda x: x["weight"], reverse=True)
+    
+    def rebuild_clusters(skill_displays):
+        clusters = {}
+        for display in skill_displays:
+            canon = display.lower()
+            cats = skills_flat.get(canon, {}).get("categories", ["Unknown"])
+            for c in cats:
+                if c not in clusters: clusters[c] = []
+                clusters[c].append(display)
+        return clusters
+        
+    jd_clusters = rebuild_clusters(raw_jd_displays)
+    resume_clusters = rebuild_clusters(raw_resume_displays)
+    
+    total_weight = sum([skills_flat.get(s.lower(), {}).get("max_weight", 1.0) for s in raw_jd_displays])
+    
+    if total_weight > 0:
+        matched_jd_weight = 0.0
+        counted = set()
+
+        for match in partition["exact_match"]:
+            key = match.lower()
+            if key not in counted:
+                matched_jd_weight += skills_flat.get(key, {}).get("max_weight", 1.0)
+                counted.add(key)
+
+        for strong in partition["strong_semantic"]:
+            key = strong["similar_to"].lower()
+            if key not in counted:
+                matched_jd_weight += skills_flat.get(key, {}).get("max_weight", 1.0) * 0.6
+                counted.add(key)
+
+        for mod in partition["moderate_semantic"]:
+            key = mod["similar_to"].lower()
+            if key not in counted:
+                matched_jd_weight += skills_flat.get(key, {}).get("max_weight", 1.0) * 0.4
+                counted.add(key)
+
+        overall_score = round((matched_jd_weight / total_weight) * 100, 1)
+    else:
+        overall_score = 0.0
+
     return {
-        "exact_match": sorted(exact_match),
-        "partial_match": sorted(partial_match),
-        "irrelevant": sorted(irrelevant),
-        "jd_bert_skills": sorted(jd_skills),
-        "resume_bert_skills": sorted(resume_skills)
+         "summary": {
+            "total_jd_skills": len(raw_jd_displays),
+            "resume_detected_skills": len(raw_resume_displays),
+            "exact_match_count": len(partition["exact_match"]),
+            "semantic_match_count": len(partition["strong_semantic"]) + len(partition["moderate_semantic"]),
+            "missing_skills_count": len(missing_from_resume),
+            "overall_alignment_score": overall_score
+        },
+        "skill_partition": partition,
+        "missing_from_resume": missing_from_resume,
+        "extra_resume_skills": partition["irrelevant"],
+        "jd_skill_clusters": jd_clusters,
+        "resume_skill_clusters": resume_clusters
     }

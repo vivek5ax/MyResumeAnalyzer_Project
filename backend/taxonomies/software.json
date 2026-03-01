@@ -1,115 +1,460 @@
 {
-    "Programming Languages": {
-        "weight": 1.2,
-        "skills": [
-            "Python",
-            "Java",
-            "JavaScript",
-            "TypeScript",
-            "C++",
-            "C#",
-            "Ruby",
-            "Go",
-            "Rust",
-            "PHP",
-            "SQL",
-            "HTML",
-            "CSS"
-        ]
+    "_meta": {
+        "domain": "software",
+        "version": "2.0-alias-enhanced",
+        "last_updated": "2026-02-28"
     },
-    "Backend Development": {
-        "weight": 1.3,
-        "skills": [
-            "Django",
-            "Flask",
-            "FastAPI",
-            "Spring Boot",
-            "Node.js",
-            "Express",
-            "ASP.NET",
-            "Ruby on Rails",
-            "PostgreSQL",
-            "MongoDB",
-            "Redis",
-            "REST API",
-            "GraphQL"
-        ]
-    },
-    "Frontend Development": {
-        "weight": 1.1,
-        "skills": [
-            "React",
-            "Angular",
-            "Vue.js",
-            "Next.js",
-            "Tailwind CSS",
-            "Redux",
-            "Webpack",
-            "Bootstrap"
-        ]
-    },
-    "Data Science & AI": {
-        "weight": 1.4,
-        "skills": [
-            "Machine Learning",
-            "Deep Learning",
-            "Natural Language Processing",
-            "Computer Vision",
-            "TensorFlow",
-            "PyTorch",
-            "Scikit-learn",
-            "Pandas",
-            "NumPy",
-            "Keras",
-            "Large Language Models",
-            "BERT",
-            "Generative AI",
-            "Neural Networks",
-            "NLP"
-        ]
-    },
-    "Data Analysis & Visualization": {
-        "weight": 1.2,
-        "skills": [
-            "Matplotlib",
-            "Seaborn",
-            "Tableau",
-            "Power BI",
-            "Data Cleaning",
-            "Statistics",
-            "Probability",
-            "R Programming",
-            "Excel"
-        ]
-    },
-    "DevOps & Cloud": {
-        "weight": 1.4,
-        "skills": [
-            "AWS",
-            "Azure",
-            "Google Cloud",
-            "Docker",
-            "Kubernetes",
-            "Jenkins",
-            "Git",
-            "GitHub",
-            "GitLab",
-            "Terraform",
-            "CI/CD",
-            "Linux",
-            "Nginx",
-            "Apache"
-        ]
-    },
-    "Architecture & APIs": {
-        "weight": 1.3,
-        "skills": [
-            "Microservices",
-            "System Design",
-            "REST API",
-            "Design Patterns",
-            "Agile",
-            "Scrum"
-        ]
+    "categories": {
+        "Programming Languages": {
+            "weight": 1.2,
+            "skills": [
+                {
+                    "name": "Python",
+                    "aliases": [
+                        "Python 3",
+                        "Python3"
+                    ]
+                },
+                {
+                    "name": "Java",
+                    "aliases": [
+                        "J2EE",
+                        "Core Java"
+                    ]
+                },
+                {
+                    "name": "JavaScript",
+                    "aliases": [
+                        "JS",
+                        "ES6",
+                        "Vanilla JS"
+                    ]
+                },
+                {
+                    "name": "TypeScript",
+                    "aliases": [
+                        "TS"
+                    ]
+                },
+                {
+                    "name": "C++",
+                    "aliases": [
+                        "CPP",
+                        "C Plus Plus"
+                    ]
+                },
+                {
+                    "name": "C#",
+                    "aliases": [
+                        "C Sharp",
+                        ".NET C#"
+                    ]
+                },
+                {
+                    "name": "Ruby",
+                    "aliases": []
+                },
+                {
+                    "name": "Go",
+                    "aliases": [
+                        "Golang"
+                    ]
+                },
+                {
+                    "name": "Rust",
+                    "aliases": []
+                },
+                {
+                    "name": "PHP",
+                    "aliases": []
+                },
+                {
+                    "name": "SQL",
+                    "aliases": [
+                        "Structured Query Language"
+                    ]
+                },
+                {
+                    "name": "HTML",
+                    "aliases": [
+                        "HTML5"
+                    ]
+                },
+                {
+                    "name": "CSS",
+                    "aliases": [
+                        "CSS3"
+                    ]
+                }
+            ]
+        },
+        "Backend Development": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "Django",
+                    "aliases": []
+                },
+                {
+                    "name": "Flask",
+                    "aliases": []
+                },
+                {
+                    "name": "FastAPI",
+                    "aliases": []
+                },
+                {
+                    "name": "Spring Boot",
+                    "aliases": [
+                        "Spring"
+                    ]
+                },
+                {
+                    "name": "Node.js",
+                    "aliases": [
+                        "NodeJS",
+                        "Node"
+                    ]
+                },
+                {
+                    "name": "Express",
+                    "aliases": [
+                        "Express.js",
+                        "ExpressJS"
+                    ]
+                },
+                {
+                    "name": "ASP.NET",
+                    "aliases": [
+                        ".NET Core",
+                        ".NET"
+                    ]
+                },
+                {
+                    "name": "Ruby on Rails",
+                    "aliases": [
+                        "Rails",
+                        "RoR"
+                    ]
+                },
+                {
+                    "name": "PostgreSQL",
+                    "aliases": [
+                        "Postgres"
+                    ]
+                },
+                {
+                    "name": "MongoDB",
+                    "aliases": [
+                        "Mongo"
+                    ]
+                },
+                {
+                    "name": "Redis",
+                    "aliases": []
+                },
+                {
+                    "name": "REST API",
+                    "aliases": [
+                        "RESTful API",
+                        "REST"
+                    ]
+                },
+                {
+                    "name": "GraphQL",
+                    "aliases": []
+                }
+            ]
+        },
+        "Frontend Development": {
+            "weight": 1.1,
+            "skills": [
+                {
+                    "name": "React",
+                    "aliases": [
+                        "React.js",
+                        "ReactJS"
+                    ]
+                },
+                {
+                    "name": "Angular",
+                    "aliases": [
+                        "Angular.js",
+                        "AngularJS"
+                    ]
+                },
+                {
+                    "name": "Vue.js",
+                    "aliases": [
+                        "Vue",
+                        "VueJS"
+                    ]
+                },
+                {
+                    "name": "Next.js",
+                    "aliases": [
+                        "Next",
+                        "NextJS"
+                    ]
+                },
+                {
+                    "name": "Tailwind CSS",
+                    "aliases": [
+                        "Tailwind"
+                    ]
+                },
+                {
+                    "name": "Redux",
+                    "aliases": []
+                },
+                {
+                    "name": "Webpack",
+                    "aliases": []
+                },
+                {
+                    "name": "Bootstrap",
+                    "aliases": []
+                }
+            ]
+        },
+        "Data Science & AI": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "Machine Learning",
+                    "aliases": [
+                        "ML",
+                        "Machine-Learning"
+                    ]
+                },
+                {
+                    "name": "Deep Learning",
+                    "aliases": [
+                        "DL",
+                        "Neural Networks"
+                    ]
+                },
+                {
+                    "name": "Natural Language Processing",
+                    "aliases": [
+                        "NLP"
+                    ]
+                },
+                {
+                    "name": "Computer Vision",
+                    "aliases": [
+                        "CV"
+                    ]
+                },
+                {
+                    "name": "TensorFlow",
+                    "aliases": [
+                        "TF"
+                    ]
+                },
+                {
+                    "name": "PyTorch",
+                    "aliases": []
+                },
+                {
+                    "name": "Scikit-learn",
+                    "aliases": [
+                        "Sklearn"
+                    ]
+                },
+                {
+                    "name": "Pandas",
+                    "aliases": []
+                },
+                {
+                    "name": "NumPy",
+                    "aliases": []
+                },
+                {
+                    "name": "Keras",
+                    "aliases": []
+                },
+                {
+                    "name": "Large Language Models",
+                    "aliases": [
+                        "LLM",
+                        "LLMs",
+                        "Generative AI"
+                    ]
+                },
+                {
+                    "name": "BERT",
+                    "aliases": []
+                }
+            ]
+        },
+        "Data Analysis & Visualization": {
+            "weight": 1.2,
+            "skills": [
+                {
+                    "name": "Matplotlib",
+                    "aliases": []
+                },
+                {
+                    "name": "Seaborn",
+                    "aliases": []
+                },
+                {
+                    "name": "Tableau",
+                    "aliases": []
+                },
+                {
+                    "name": "Power BI",
+                    "aliases": [
+                        "PowerBI"
+                    ]
+                },
+                {
+                    "name": "Data Cleaning",
+                    "aliases": [
+                        "Data Wrangling"
+                    ]
+                },
+                {
+                    "name": "Statistics",
+                    "aliases": [
+                        "Statistical Analysis"
+                    ]
+                },
+                {
+                    "name": "Probability",
+                    "aliases": []
+                },
+                {
+                    "name": "R Programming",
+                    "aliases": [
+                        "R Language",
+                        "R"
+                    ]
+                },
+                {
+                    "name": "Excel",
+                    "aliases": [
+                        "MS Excel"
+                    ]
+                }
+            ]
+        },
+        "DevOps & Cloud": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "AWS",
+                    "aliases": [
+                        "Amazon Web Services"
+                    ]
+                },
+                {
+                    "name": "Azure",
+                    "aliases": [
+                        "Microsoft Azure"
+                    ]
+                },
+                {
+                    "name": "Google Cloud",
+                    "aliases": [
+                        "GCP",
+                        "Google Cloud Platform"
+                    ]
+                },
+                {
+                    "name": "Docker",
+                    "aliases": [
+                        "Docker Containers"
+                    ]
+                },
+                {
+                    "name": "Kubernetes",
+                    "aliases": [
+                        "K8s"
+                    ]
+                },
+                {
+                    "name": "Jenkins",
+                    "aliases": []
+                },
+                {
+                    "name": "Git",
+                    "aliases": [
+                        "Version Control"
+                    ]
+                },
+                {
+                    "name": "GitHub",
+                    "aliases": []
+                },
+                {
+                    "name": "GitLab",
+                    "aliases": []
+                },
+                {
+                    "name": "Terraform",
+                    "aliases": [
+                        "IaC",
+                        "Infrastructure as Code"
+                    ]
+                },
+                {
+                    "name": "CI/CD",
+                    "aliases": [
+                        "Continuous Integration",
+                        "Continuous Deployment",
+                        "Continuous Delivery"
+                    ]
+                },
+                {
+                    "name": "Linux",
+                    "aliases": [
+                        "Unix"
+                    ]
+                },
+                {
+                    "name": "Nginx",
+                    "aliases": []
+                },
+                {
+                    "name": "Apache",
+                    "aliases": []
+                }
+            ]
+        },
+        "Architecture & APIs": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "Microservices",
+                    "aliases": [
+                        "Microservice Architecture"
+                    ]
+                },
+                {
+                    "name": "System Design",
+                    "aliases": [
+                        "Software Architecture"
+                    ]
+                },
+                {
+                    "name": "Design Patterns",
+                    "aliases": [
+                        "Software Design Patterns"
+                    ]
+                },
+                {
+                    "name": "Agile",
+                    "aliases": [
+                        "Agile Methodology"
+                    ]
+                },
+                {
+                    "name": "Scrum",
+                    "aliases": []
+                }
+            ]
+        }
     }
 }

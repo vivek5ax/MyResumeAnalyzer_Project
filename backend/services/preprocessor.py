@@ -4,28 +4,41 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-def clean_text(text: str) -> str:
+def generate_versions(text: str) -> dict:
+    """
+    Generates three specialized versions of the input text for different NLP tasks.
+    """
     if not text:
-        return ""
+        return {
+            "raw_text": "",
+            "light_clean_text": "",
+            "normalized_text": ""
+        }
     
-    # 1. Strip and lowercase
-    text = text.strip().lower()
+    # ---------------------------------------------------------
+    # VERSION A: Raw Text (Used for BERT Embeddings, spaCy NER)
+    # ---------------------------------------------------------
+    # Only normalizes whitespace/newlines to avoid parsing crashes
+    # Preserves stopwords, punctuation, casing, sentences.
+    text_raw = text.strip()
     
-    # 2. Heuristic: Remove bullet points represented as 'o' (space + o + space)
-    # Common issue in PDF extraction where bullets are parsed as lowercase 'o'
-    text = re.sub(r'\s+o\s+', ' ', text)
+    # ---------------------------------------------------------
+    # VERSION B: Light Clean (Used for spaCy PhraseMatcher)
+    # ---------------------------------------------------------
+    # Lowercases, removes noise, keeps letters/numbers and tech punctuation (. + # / -)
+    text_light = text_raw.lower()
+    # Remove PDF extraction bullet heuristic (' o ')
+    text_light = re.sub(r'\s+o\s+', ' ', text_light)
+    # explicitly preserve a-z, 0-9, \s, and technically important characters: . + # / -
+    text_light = re.sub(r'[^a-z0-9\s.\+#/\-]', ' ', text_light)
+    # Normalize intermediate whitespace
+    text_light = ' '.join(text_light.split())
     
-    # 3. Remove special characters (preserving essential ones)
-    # Preserving: a-z, 0-9, and . ! ? - @ /
-    # (Removed comma manually)
-    text = re.sub(r'[^a-z0-9\s.!?\-@/]', '', text)
-    
-    # 4. Heuristic: Remove sentence-ending dots
-    # Removes dots followed by spaces or dots at the end of the string.
-    # This preserves dots in the middle of words (like gmail.com).
-    text = re.sub(r'\.(?=\s|$)', ' ', text)
-    
-    # 5. Remove Stop Words
+    # ---------------------------------------------------------
+    # VERSION C: Normalized (Used for Keyword Frequency)
+    # ---------------------------------------------------------
+    # Same as B, but completely strips stopwords
+    text_norm = text_light
     stop_words = {
         'a', 'an', 'the', 'and', 'or', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'from', 'up', 'about', 'into', 
         'over', 'after', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 
@@ -36,53 +49,57 @@ def clean_text(text: str) -> str:
         'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 
         'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 
         'these', 'those', 'am', 'because', 'as', 'until', 'while', 'of', 'against', 'between', 'through', 'during', 
-        'before', 'again', 'further', 'once', 'here', 'there', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 
-        'other', 'some', 'such', 'nor', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 
-        'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', 
-        "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 
-        'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 
-        'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"
+        'before', 'again', 'further', 'once', 'here', 'there'
     }
-    words = text.split()
-    text = ' '.join([word for word in words if word not in stop_words])
+    words = text_norm.split()
+    text_norm = ' '.join([word for word in words if word not in stop_words])
     
-    # 6. Normalize whitespace (convert multiple spaces/newlines to single space)
-    text = ' '.join(text.split())
-    
-    return text
+    return {
+        "raw_text": text_raw,
+        "light_clean_text": text_light,
+        "normalized_text": text_norm
+    }
 
-def save_data(resume_text: str, jd_text: str, resume_name: str, jd_name: str, resume_skills: dict = None, jd_skills: dict = None, bert_results: dict = None) -> str:
-    # ... (session setup) ...
+
+def save_data(resume_versions: dict, jd_versions: dict, resume_name: str, jd_name: str, resume_skills: dict = None, jd_skills: dict = None, bert_results: dict = None) -> str:
+    """
+    Saves extraction metadata maintaining all text versions.
+    """
     session_id = f"ext_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     base_dir = Path(__file__).parent.parent / "data" / "sessions" / session_id
     base_dir.mkdir(parents=True, exist_ok=True)
     
-    cleaned_resume = clean_text(resume_text)
-    cleaned_jd = clean_text(jd_text)
+    # Save a convenient clean human readable text just for file reference (Version B)
+    with open(base_dir / "resume_light_clean.txt", "w", encoding="utf-8") as f:
+        f.write(resume_versions["light_clean_text"])
+        
+    with open(base_dir / "jd_light_clean.txt", "w", encoding="utf-8") as f:
+        f.write(jd_versions["light_clean_text"])
     
-    with open(base_dir / "resume_clean.txt", "w", encoding="utf-8") as f:
-        f.write(cleaned_resume)
-    with open(base_dir / "jd_clean.txt", "w", encoding="utf-8") as f:
-        f.write(cleaned_jd)
-    
-    # 5. Save Metadata, Cleaned Content, and Skills in JSON
+    # Save Metadata, Cleaned Content Versions, and Skills in JSON
     metadata = {
         "session_id": session_id,
         "timestamp": datetime.now().isoformat(),
         "resume_filename": resume_name,
         "jd_filename": jd_name,
-        "resume_clean": cleaned_resume,
-        "jd_clean": cleaned_jd,
+        
+        # Save all formats explicitly 
+        "resume_versions": resume_versions,
+        "jd_versions": jd_versions,
+        
         "resume_skills": resume_skills or {"technical_skills": [], "soft_skills": []},
         "jd_skills": jd_skills or {"technical_skills": [], "soft_skills": []},
+        "overall_alignment_score": bert_results.get("summary", {}).get("overall_alignment_score", 0.0) if bert_results else 0.0,
         "bert_results": bert_results or {"jd_bert_skills": [], "resume_bert_skills": [], "matched_bert_skills": []},
-        "raw_counts": {
-            "resume": len(resume_text),
-            "jd": len(jd_text)
-        },
-        "clean_counts": {
-            "resume": len(cleaned_resume),
-            "jd": len(cleaned_jd)
+        
+        # Maintain Auditability Rules
+        "char_counts": {
+            "resume_raw": len(resume_versions["raw_text"]),
+            "resume_light_clean": len(resume_versions["light_clean_text"]),
+            "resume_normalized": len(resume_versions["normalized_text"]),
+            "jd_raw": len(jd_versions["raw_text"]),
+            "jd_light_clean": len(jd_versions["light_clean_text"]),
+            "jd_normalized": len(jd_versions["normalized_text"])
         }
     }
     
@@ -90,3 +107,4 @@ def save_data(resume_text: str, jd_text: str, resume_name: str, jd_name: str, re
         json.dump(metadata, f, indent=4)
         
     return session_id
+

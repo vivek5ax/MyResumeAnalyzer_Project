@@ -8,8 +8,8 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
     const resumeSkills = data.resume_skills || { technical_skills: [], soft_skills: [], categorized_skills: {} };
     const jdSkills = data.jd_skills || { technical_skills: [], soft_skills: [], categorized_skills: {} };
 
-    // Normalize case for matching
-    const normalize = (s) => s.toLowerCase().trim();
+    // Normalize case for matching safely from string or object
+    const normalize = (s) => (typeof s === 'object' ? s.skill : s)?.toLowerCase().trim() || "";
     const resumeFlat = (resumeSkills.technical_skills || []).map(normalize);
 
     const ComparisonCard = ({ category, jdItems }) => {
@@ -47,13 +47,14 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                         <div className="skills-list">
                             {jdItems.map((skill, idx) => {
                                 const isMatched = resumeFlat.includes(normalize(skill));
+                                const skillName = typeof skill === 'object' ? skill.skill : skill;
                                 return (
                                     <span
                                         key={idx}
                                         className={`skill-tag ${isMatched ? 'skill-tag-matched-refined tag-highlight-green-refined' : 'skill-tag-missing-refined'}`}
                                     >
                                         {isMatched && <CheckCircle2 size={14} style={{ marginRight: '6px' }} />}
-                                        {skill}
+                                        {skillName}
                                     </span>
                                 );
                             })}
@@ -70,13 +71,14 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                             {resumeInCategory.length > 0 ? (
                                 resumeInCategory.map((skill, idx) => {
                                     const isRelevant = jdItems.map(normalize).includes(normalize(skill));
+                                    const skillName = typeof skill === 'object' ? skill.skill : skill;
                                     return (
                                         <span
                                             key={idx}
                                             className={`skill-tag ${isRelevant ? 'skill-tag-matched-refined' : 'tech-tag'}`}
                                         >
                                             {isRelevant && <CheckCircle2 size={14} style={{ marginRight: '6px' }} />}
-                                            {skill}
+                                            {skillName}
                                         </span>
                                     );
                                 })
@@ -143,7 +145,7 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                                     <div className="skill-col-header-refined" style={{ color: '#059669' }}>Required in JD</div>
                                     <div className="skills-list">
                                         {(jdSkills.soft_skills || []).map((skill, idx) => (
-                                            <span key={idx} className="skill-tag soft-tag">{skill}</span>
+                                            <span key={idx} className="skill-tag soft-tag">{typeof skill === 'object' ? skill.skill : skill}</span>
                                         ))}
                                     </div>
                                 </div>
@@ -153,7 +155,7 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                                         {(resumeSkills.soft_skills || []).map((skill, idx) => (
                                             <span key={idx} className="skill-tag soft-tag" style={{ background: '#dcfce7', borderColor: '#10b981', color: '#15803d' }}>
                                                 <CheckCircle2 size={14} style={{ marginRight: '6px' }} />
-                                                {skill}
+                                                {typeof skill === 'object' ? skill.skill : skill}
                                             </span>
                                         ))}
                                     </div>
@@ -178,7 +180,7 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                                                 <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{cat}</div>
                                                 <div className="skills-list">
                                                     {skills.map((skill, idx) => (
-                                                        <span key={idx} className="skill-tag tech-tag" style={{ opacity: 0.8 }}>{skill}</span>
+                                                        <span key={idx} className="skill-tag tech-tag" style={{ opacity: 0.8 }}>{typeof skill === 'object' ? skill.skill : skill}</span>
                                                     ))}
                                                 </div>
                                             </div>

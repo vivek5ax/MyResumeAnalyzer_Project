@@ -21,3 +21,5 @@ def read_root():
     return {"message": "Resume Analyzer API is running"}
 
 #uvicorn main:app --reload
+
+#.\venv\Scripts\python.exe -c "import uvicorn; uvicorn.run('main:app', host='127.0.0.1', port=8000, reload=True)"

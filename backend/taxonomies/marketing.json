@@ -1,36 +1,256 @@
 {
-    "Digital Marketing": {
-        "weight": 1.2,
-        "skills": [
-            "SEO",
-            "SEM",
-            "PPC",
-            "Social Media Marketing",
-            "Email Marketing",
-            "Content Strategy",
-            "Campaign Management",
-            "Google Analytics"
-        ]
+    "_meta": {
+        "domain": "marketing",
+        "version": "3.0-production-enhanced",
+        "last_updated": "2026-02-28"
     },
-    "Content & Design": {
-        "weight": 1.1,
-        "skills": [
-            "Copywriting",
-            "Graphic Design",
-            "Canva",
-            "Adobe Photoshop",
-            "Video Editing",
-            "Storytelling"
-        ]
-    },
-    "Performance & Growth": {
-        "weight": 1.3,
-        "skills": [
-            "Growth Hacking",
-            "Conversion Rate Optimization",
-            "A/B Testing",
-            "Customer Acquisition",
-            "Brand Management"
-        ]
+    "categories": {
+        "Digital Marketing": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "SEO",
+                    "aliases": [
+                        "Search Engine Optimization",
+                        "On-Page SEO",
+                        "Technical SEO",
+                        "Off-Page SEO",
+                        "Keyword Research",
+                        "SERP Optimization",
+                        "Organic Traffic",
+                        "Link Building"
+                    ]
+                },
+                {
+                    "name": "SEM",
+                    "aliases": [
+                        "Search Engine Marketing",
+                        "Paid Search"
+                    ]
+                },
+                {
+                    "name": "PPC",
+                    "aliases": [
+                        "Pay Per Click",
+                        "Pay-Per-Click",
+                        "Google Ads",
+                        "Bing Ads",
+                        "Meta Ads",
+                        "Facebook Ads"
+                    ]
+                },
+                {
+                    "name": "Social Media Marketing",
+                    "aliases": [
+                        "SMM",
+                        "Social Media Management",
+                        "Instagram Marketing",
+                        "LinkedIn Marketing",
+                        "Social Campaigns"
+                    ]
+                },
+                {
+                    "name": "Email Marketing",
+                    "aliases": [
+                        "Mailchimp",
+                        "Email Campaigns",
+                        "Newsletter Marketing",
+                        "Drip Campaigns",
+                        "Email Automation"
+                    ]
+                },
+                {
+                    "name": "Content Strategy",
+                    "aliases": [
+                        "Content Marketing",
+                        "Content Creation",
+                        "Editorial Strategy",
+                        "Blog Strategy"
+                    ]
+                },
+                {
+                    "name": "Marketing Automation",
+                    "aliases": [
+                        "HubSpot",
+                        "Marketo",
+                        "ActiveCampaign",
+                        "Automation Workflows"
+                    ]
+                },
+                {
+                    "name": "Google Analytics",
+                    "aliases": [
+                        "GA4",
+                        "Web Analytics",
+                        "Traffic Analysis",
+                        "User Behavior Analysis"
+                    ]
+                },
+                {
+                    "name": "Google Tag Manager",
+                    "aliases": [
+                        "GTM",
+                        "Tag Implementation"
+                    ]
+                }
+            ]
+        },
+        "Content & Creative": {
+            "weight": 1.1,
+            "skills": [
+                {
+                    "name": "Copywriting",
+                    "aliases": [
+                        "Copy Writer",
+                        "Content Writing",
+                        "Ad Copy",
+                        "Sales Copy"
+                    ]
+                },
+                {
+                    "name": "Graphic Design",
+                    "aliases": [
+                        "Visual Design",
+                        "Creative Design"
+                    ]
+                },
+                {
+                    "name": "Canva",
+                    "aliases": []
+                },
+                {
+                    "name": "Adobe Photoshop",
+                    "aliases": [
+                        "Photoshop"
+                    ]
+                },
+                {
+                    "name": "Video Editing",
+                    "aliases": [
+                        "Premiere Pro",
+                        "Final Cut Pro",
+                        "Reels Editing"
+                    ]
+                },
+                {
+                    "name": "Storytelling",
+                    "aliases": [
+                        "Brand Storytelling",
+                        "Narrative Marketing"
+                    ]
+                },
+                {
+                    "name": "Brand Management",
+                    "aliases": [
+                        "Branding",
+                        "Brand Strategy",
+                        "Brand Positioning"
+                    ]
+                }
+            ]
+        },
+        "Performance & Growth": {
+            "weight": 1.4,
+            "skills": [
+                {
+                    "name": "Growth Hacking",
+                    "aliases": [
+                        "Growth Marketing",
+                        "Viral Growth"
+                    ]
+                },
+                {
+                    "name": "Conversion Rate Optimization",
+                    "aliases": [
+                        "CRO",
+                        "Funnel Optimization",
+                        "Landing Page Optimization"
+                    ]
+                },
+                {
+                    "name": "A/B Testing",
+                    "aliases": [
+                        "Split Testing",
+                        "Experimentation"
+                    ]
+                },
+                {
+                    "name": "Customer Acquisition",
+                    "aliases": [
+                        "Lead Generation",
+                        "Lead Gen",
+                        "User Acquisition"
+                    ]
+                },
+                {
+                    "name": "KPI Tracking",
+                    "aliases": [
+                        "Performance Metrics",
+                        "Marketing KPIs",
+                        "Campaign Metrics"
+                    ]
+                },
+                {
+                    "name": "ROAS",
+                    "aliases": [
+                        "Return on Ad Spend"
+                    ]
+                },
+                {
+                    "name": "CAC",
+                    "aliases": [
+                        "Customer Acquisition Cost"
+                    ]
+                },
+                {
+                    "name": "Attribution Modeling",
+                    "aliases": [
+                        "Marketing Attribution"
+                    ]
+                }
+            ]
+        },
+        "Strategy & Research": {
+            "weight": 1.3,
+            "skills": [
+                {
+                    "name": "Market Research",
+                    "aliases": [
+                        "Competitor Analysis",
+                        "Industry Analysis",
+                        "Consumer Research"
+                    ]
+                },
+                {
+                    "name": "Customer Segmentation",
+                    "aliases": [
+                        "Audience Segmentation",
+                        "Target Segmentation"
+                    ]
+                },
+                {
+                    "name": "CRM Management",
+                    "aliases": [
+                        "Salesforce",
+                        "CRM Tools"
+                    ]
+                },
+                {
+                    "name": "Campaign Management",
+                    "aliases": [
+                        "Ad Campaigns",
+                        "Campaign Strategy",
+                        "Campaign Execution"
+                    ]
+                },
+                {
+                    "name": "Marketing Strategy",
+                    "aliases": [
+                        "Go-To-Market Strategy",
+                        "GTM Strategy"
+                    ]
+                }
+            ]
+        }
     }
 }
