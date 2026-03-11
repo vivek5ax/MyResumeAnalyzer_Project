@@ -1,9 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
+from fastapi.responses import StreamingResponse
+from typing import Dict, Any
 from services.validator import validate_file
 from services.parser import parse_text
 from services.preprocessor import generate_versions, save_data
 from services.analyzer import extract_skills
 from services.bert_analyzer import analyze_semantic_matching
+from services.pdf_generator import generate_formal_pdf
 
 router = APIRouter()
 
@@ -66,3 +69,27 @@ async def extract_content(
         "jd_skills": jd_skills,
         "bert_results": bert_results
     }
+
+@router.post("/export-pdf")
+async def export_pdf(payload: Dict[str, Any] = Body(...)):
+    """
+    Receives JSON data from the frontend and generates a native PDF using ReportLab & Matplotlib.
+    Returns the PDF as a streaming response.
+    """
+    try:
+        pdf_buffer = generate_formal_pdf(payload)
+        
+        headers = {
+            'Content-Disposition': 'attachment; filename="Resume_Analysis_Report.pdf"'
+        }
+        
+        return StreamingResponse(
+            pdf_buffer, 
+            media_type="application/pdf", 
+            headers=headers
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Error generating PDF: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
