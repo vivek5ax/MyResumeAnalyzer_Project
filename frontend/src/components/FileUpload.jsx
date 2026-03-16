@@ -1,11 +1,14 @@
 import React, { useRef, useState } from 'react';
 import { UploadCloud, AlertCircle, X, Folder, File } from 'lucide-react';
 
-const FileUpload = ({ onFileSelect, accept, label }) => {
+const FileUpload = ({ onFileSelect, accept, label, selectedFile }) => {
     const fileInputRef = useRef(null);
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [internalSelectedFile, setInternalSelectedFile] = useState(null);
+
+    const isControlled = selectedFile !== undefined;
+    const activeFile = isControlled ? selectedFile : internalSelectedFile;
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -33,7 +36,7 @@ const FileUpload = ({ onFileSelect, accept, label }) => {
 
     const handleFileProcess = (file) => {
         if (validateFile(file)) {
-            setSelectedFile(file);
+            setInternalSelectedFile(file);
             onFileSelect(file);
         }
     };
@@ -52,7 +55,7 @@ const FileUpload = ({ onFileSelect, accept, label }) => {
 
     const removeFile = (e) => {
         e.stopPropagation();
-        setSelectedFile(null);
+        setInternalSelectedFile(null);
         onFileSelect(null);
         // Reset input value so same file can be selected again
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -74,7 +77,7 @@ const FileUpload = ({ onFileSelect, accept, label }) => {
         return `${truncated}...${extension}`;
     };
 
-    if (selectedFile) {
+    if (activeFile) {
         return (
             <div className="file-card-wrapper">
                 <div className="folder-icon-wrapper">
@@ -84,13 +87,13 @@ const FileUpload = ({ onFileSelect, accept, label }) => {
                     </div>
                 </div>
                 <div className="file-meta">
-                    <div className="file-name" title={selectedFile.name}>
-                        {truncateName(selectedFile.name)}
+                    <div className="file-name" title={activeFile.name}>
+                        {truncateName(activeFile.name)}
                     </div>
                     <div className="file-details">
-                        <span>{formatSize(selectedFile.size)}</span>
+                        <span>{formatSize(activeFile.size)}</span>
                         <span>•</span>
-                        <span style={{ textTransform: 'uppercase' }}>{selectedFile.name.split('.').pop()}</span>
+                        <span style={{ textTransform: 'uppercase' }}>{activeFile.name.split('.').pop()}</span>
                     </div>
                 </div>
                 <button className="remove-btn" onClick={removeFile} title="Remove File">
@@ -121,10 +124,10 @@ const FileUpload = ({ onFileSelect, accept, label }) => {
             </div>
 
             <p style={{ fontWeight: 500, marginBottom: '0.5rem' }}>
-                Drag & Drop your {label} here
+                Upload {label}
             </p>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Supports PDF, DOCX, TXT (Max 5MB)
+                Drag and drop or click to browse. Supported formats: PDF, DOCX, TXT (Max 5MB)
             </p>
 
             {error && <p style={{ color: 'var(--error)', fontSize: '0.9rem', marginTop: '1rem' }}>{error}</p>}

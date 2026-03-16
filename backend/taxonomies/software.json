@@ -1,12 +1,12 @@
 {
     "_meta": {
         "domain": "software",
-        "version": "2.0-alias-enhanced",
-        "last_updated": "2026-02-28"
+        "version": "2.1-alias-enhanced",
+        "last_updated": "2026-03-11"
     },
     "categories": {
         "Programming Languages": {
-            "weight": 1.2,
+            "weight": 1.3,
             "skills": [
                 {
                     "name": "Python",
@@ -89,7 +89,7 @@
             ]
         },
         "Backend Development": {
-            "weight": 1.3,
+            "weight": 1.35,
             "skills": [
                 {
                     "name": "Django",
@@ -157,7 +157,9 @@
                     "name": "REST API",
                     "aliases": [
                         "RESTful API",
-                        "REST"
+                        "REST",
+                        "RESTful Services",
+                        "RESTful Web Services"
                     ]
                 },
                 {
@@ -167,7 +169,7 @@
             ]
         },
         "Frontend Development": {
-            "weight": 1.1,
+            "weight": 1.05,
             "skills": [
                 {
                     "name": "React",
@@ -218,7 +220,7 @@
             ]
         },
         "Data Science & AI": {
-            "weight": 1.4,
+            "weight": 1.15,
             "skills": [
                 {
                     "name": "Machine Learning",
@@ -289,7 +291,7 @@
             ]
         },
         "Data Analysis & Visualization": {
-            "weight": 1.2,
+            "weight": 1.0,
             "skills": [
                 {
                     "name": "Matplotlib",
@@ -404,7 +406,10 @@
                     "aliases": [
                         "Continuous Integration",
                         "Continuous Deployment",
-                        "Continuous Delivery"
+                        "Continuous Delivery",
+                        "CI CD",
+                        "CICD",
+                        "GitHub Actions"
                     ]
                 },
                 {
@@ -424,18 +429,46 @@
             ]
         },
         "Architecture & APIs": {
-            "weight": 1.3,
+            "weight": 1.45,
             "skills": [
                 {
                     "name": "Microservices",
                     "aliases": [
-                        "Microservice Architecture"
+                        "Microservice Architecture",
+                        "Micro-services",
+                        "Service Oriented Architecture",
+                        "SOA"
                     ]
                 },
                 {
                     "name": "System Design",
                     "aliases": [
-                        "Software Architecture"
+                        "Software Architecture",
+                        "High Level Design",
+                        "HLD",
+                        "Low Level Design",
+                        "LLD"
+                    ]
+                },
+                {
+                    "name": "Distributed Systems",
+                    "aliases": [
+                        "Distributed Architecture"
+                    ]
+                },
+                {
+                    "name": "Data Structures and Algorithms",
+                    "aliases": [
+                        "Data Structures & Algorithms",
+                        "DSA",
+                        "Algorithms"
+                    ]
+                },
+                {
+                    "name": "Object-Oriented Programming",
+                    "aliases": [
+                        "OOP",
+                        "OOPS"
                     ]
                 },
                 {

@@ -1,0 +1,1031 @@
+{
+  "sessions_evaluated": 22,
+  "sessions_failed": 0,
+  "aggregate": {
+    "avg_delta_total_jd_skills": 2.864,
+    "avg_delta_resume_detected_skills": 1.909,
+    "avg_delta_exact_match_count": 0.955,
+    "avg_delta_semantic_match_count": 0.955,
+    "avg_delta_missing_skills_count": 0.955,
+    "avg_delta_overall_alignment_score": 1.145,
+    "avg_rate_delta_coverage_rate": 0.281,
+    "avg_rate_delta_exact_rate": -1.965,
+    "avg_rate_delta_semantic_rate": 2.246,
+    "avg_rate_delta_missing_rate": -2.807
+  },
+  "results": [
+    {
+      "session_id": "ext_20260309_191739",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260309_192142",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260309_200818",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260309_201414",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260309_202054",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260309_203227",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260309_215754",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260309_220144",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260309_220520",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_185809",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_193523",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_194206",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_195808",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_200850",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_202237",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_203527",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_211300",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_213240",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_213947",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_214703",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_220758",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 17,
+        "resume_detected_skills": 23,
+        "exact_match_count": 8,
+        "semantic_match_count": 3,
+        "missing_skills_count": 9,
+        "overall_alignment_score": 42.8
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 3.0,
+        "resume_detected_skills": 2.0,
+        "exact_match_count": 1.0,
+        "semantic_match_count": 1.0,
+        "missing_skills_count": 1.0,
+        "overall_alignment_score": 1.2
+      },
+      "old_rates": {
+        "coverage_rate": 64.706,
+        "exact_rate": 47.059,
+        "semantic_rate": 17.647,
+        "missing_rate": 52.941
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.294,
+        "exact_rate": -2.059,
+        "semantic_rate": 2.353,
+        "missing_rate": -2.941
+      }
+    },
+    {
+      "session_id": "ext_20260311_224450",
+      "domain": "software",
+      "old_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "new_summary": {
+        "total_jd_skills": 20,
+        "resume_detected_skills": 25,
+        "exact_match_count": 9,
+        "semantic_match_count": 4,
+        "missing_skills_count": 10,
+        "overall_alignment_score": 44.0
+      },
+      "delta": {
+        "total_jd_skills": 0.0,
+        "resume_detected_skills": 0.0,
+        "exact_match_count": 0.0,
+        "semantic_match_count": 0.0,
+        "missing_skills_count": 0.0,
+        "overall_alignment_score": 0.0
+      },
+      "old_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "new_rates": {
+        "coverage_rate": 65.0,
+        "exact_rate": 45.0,
+        "semantic_rate": 20.0,
+        "missing_rate": 50.0
+      },
+      "rate_delta": {
+        "coverage_rate": 0.0,
+        "exact_rate": 0.0,
+        "semantic_rate": 0.0,
+        "missing_rate": 0.0
+      }
+    }
+  ],
+  "failures": []
+}

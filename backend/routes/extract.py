@@ -48,7 +48,8 @@ async def extract_content(
         resume_flat_skills,
         resume_versions["raw_text"], 
         domain=domain,
-        threshold=0.50
+        threshold=0.50,
+        jd_text=jd_versions["raw_text"]
     )
 
     # Save Data (Persistence)

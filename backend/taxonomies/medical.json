@@ -1,8 +1,8 @@
 {
     "_meta": {
         "domain": "medical",
-        "version": "2.0-alias-enhanced",
-        "last_updated": "2026-02-28"
+        "version": "2.1-alias-enhanced",
+        "last_updated": "2026-03-11"
     },
     "categories": {
         "Clinical Core Competencies": {
@@ -292,7 +292,8 @@
                     "name": "Telemedicine",
                     "aliases": [
                         "Telehealth",
-                        "Virtual Care"
+                        "Virtual Care",
+                        "Remote Consultation"
                     ]
                 },
                 {
@@ -308,12 +309,15 @@
                 {
                     "name": "ICD Coding",
                     "aliases": [
-                        "ICD-10"
+                        "ICD-10",
+                        "ICD-11"
                     ]
                 },
                 {
                     "name": "CPT Coding",
-                    "aliases": []
+                    "aliases": [
+                        "Current Procedural Terminology"
+                    ]
                 }
             ]
         },

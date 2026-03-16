@@ -1,18 +1,26 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { X, BarChart3, PieChart as PieChartIcon, Target, AlertTriangle, Layers, BookOpen, Activity, Zap } from 'lucide-react';
+import { X, BarChart3, PieChart as PieChartIcon, Target, AlertTriangle, Layers, Activity, Zap, ShieldAlert, Gauge, GitCompareArrows } from 'lucide-react';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
-    Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+    Radar, RadarChart, PolarGrid, PolarAngleAxis
 } from 'recharts';
 
 const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
     if (!isOpen) return null;
 
+    const skillsMapRef = React.useRef(null);
+    const visualScrollRef = React.useRef(null);
+    const [skillsMapVisible, setSkillsMapVisible] = React.useState(false);
+
     const bertResults = data.bert_results || {};
     const summary = bertResults.summary || { overall_alignment_score: 0, exact_match_count: 0, semantic_match_count: 0, missing_skills_count: 0 };
     const partition = bertResults.skill_partition || { exact_match: [], strong_semantic: [], moderate_semantic: [], irrelevant: [] };
+    const missingFromResume = bertResults.missing_from_resume || [];
+    const jdClusters = bertResults.jd_skill_clusters || {};
+    const jdCategorizedSkills = data.jd_skills?.categorized_skills || {};
+    const resumeCategorizedSkills = data.resume_skills?.categorized_skills || {};
 
     // Default Colors
     const COLORS = {
@@ -40,7 +48,6 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
     ].filter(item => item.value > 0);
 
     // 3. Category Comparison Data (Grouped Bar)
-    const jdClusters = bertResults.jd_skill_clusters || {};
     const resumeClusters = bertResults.resume_skill_clusters || {};
     const allCategories = Array.from(new Set([...Object.keys(jdClusters), ...Object.keys(resumeClusters)]));
     const categoryData = allCategories.map(cat => ({
@@ -49,13 +56,185 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
         resume: resumeClusters[cat] ? resumeClusters[cat].length : 0
     })).sort((a, b) => b.jd - a.jd).slice(0, 8); // Top 8 categories for sanity
 
-    // 4. Missing Skills Priority
-    const missingPriorityData = (bertResults.missing_from_resume || [])
-        .slice(0, 5) // Top 5 urgent
-        .map(skill => ({
-            name: skill.skill,
-            weight: skill.weight || 1
-        }));
+    const semanticScores = [
+        ...(partition.strong_semantic || []).map((entry) => Number(entry.score || 0)),
+        ...(partition.moderate_semantic || []).map((entry) => Number(entry.score || 0)),
+    ];
+    const semanticReliability = semanticScores.length
+        ? Math.round((semanticScores.reduce((acc, cur) => acc + cur, 0) / semanticScores.length) * 100)
+        : 0;
+
+    const weightedRiskIndex = Math.round(missingFromResume.reduce((acc, item) => acc + Number(item.weight || 1), 0) * 10) / 10;
+    const criticalMissingCount = missingFromResume.filter((item) => Number(item.weight || 1) >= 1.3).length;
+
+    const matchedJdSkillSet = new Set([
+        ...(partition.exact_match || []).map((value) => String(value || '').toLowerCase()),
+        ...(partition.strong_semantic || []).map((value) => String(value.similar_to || '').toLowerCase()),
+        ...(partition.moderate_semantic || []).map((value) => String(value.similar_to || '').toLowerCase()),
+    ]);
+
+    const exactMatchSet = new Set((partition.exact_match || []).map((value) => String(value || '').toLowerCase()));
+    const strongMatchSet = new Set((partition.strong_semantic || []).map((value) => String(value.similar_to || '').toLowerCase()));
+    const moderateMatchSet = new Set((partition.moderate_semantic || []).map((value) => String(value.similar_to || '').toLowerCase()));
+    const missingSkillSet = new Set((missingFromResume || []).map((item) => String(item.skill || '').toLowerCase()));
+
+    const totalWeightedDemand = summary.total_jd_skills + weightedRiskIndex;
+    const weightedCoverageScore = totalWeightedDemand > 0
+        ? Math.round((((summary.exact_match_count + summary.semantic_match_count) / totalWeightedDemand) * 100) * 10) / 10
+        : 0;
+
+    const categoryHeatmapRows = Object.keys(jdClusters).map((category) => {
+        const requiredSkills = jdClusters[category] || [];
+        const requiredCount = requiredSkills.length;
+        const coveredCount = requiredSkills.filter((skill) => matchedJdSkillSet.has(String(skill || '').toLowerCase())).length;
+        const missingItems = missingFromResume.filter((item) => (item.categories || []).includes(category));
+        const missingCount = missingItems.length;
+        const weightedRisk = Math.round(missingItems.reduce((acc, item) => acc + Number(item.weight || 1), 0) * 10) / 10;
+        const coveragePct = requiredCount > 0 ? Math.round((coveredCount / requiredCount) * 100) : 0;
+        return {
+            category,
+            requiredCount,
+            coveredCount,
+            missingCount,
+            weightedRisk,
+            coveragePct,
+        };
+    }).sort((a, b) => b.weightedRisk - a.weightedRisk);
+
+    const maxRiskValue = Math.max(1, ...categoryHeatmapRows.map((row) => row.weightedRisk || 0));
+    const maxMissingValue = Math.max(1, ...categoryHeatmapRows.map((row) => row.missingCount || 0));
+
+    const normalizeSkill = (skill) => {
+        if (typeof skill === 'object' && skill !== null) {
+            return String(skill.skill || '').trim();
+        }
+        return String(skill || '').trim();
+    };
+
+    const skillBoxCategories = Array.from(new Set([
+        ...Object.keys(jdClusters || {}),
+        ...Object.keys(jdCategorizedSkills || {}),
+        ...Object.keys(resumeCategorizedSkills || {}),
+    ]));
+
+    const categorySkillBoxData = skillBoxCategories.map((category) => {
+        const requiredSource = (jdClusters?.[category] && jdClusters[category].length > 0)
+            ? jdClusters[category]
+            : ((jdCategorizedSkills?.[category] && jdCategorizedSkills[category].length > 0)
+                ? jdCategorizedSkills[category]
+                : (resumeCategorizedSkills?.[category] || []));
+
+        const resumeSource = (resumeCategorizedSkills?.[category] && resumeCategorizedSkills[category].length > 0)
+            ? resumeCategorizedSkills[category]
+            : (resumeClusters?.[category] || []);
+
+        const requiredSkills = Array.from(new Set((requiredSource || []).map(normalizeSkill).filter(Boolean)));
+        const resumeCategorySet = new Set((resumeSource || []).map(normalizeSkill).filter(Boolean).map((value) => value.toLowerCase()));
+
+        const skillItems = requiredSkills.map((skill) => {
+            const normalized = skill.toLowerCase();
+            let status = 'missing';
+
+            if (exactMatchSet.has(normalized)) {
+                status = 'exact';
+            } else if (strongMatchSet.has(normalized)) {
+                status = 'strong';
+            } else if (moderateMatchSet.has(normalized)) {
+                status = 'moderate';
+            } else if (resumeCategorySet.has(normalized)) {
+                status = 'strong';
+            } else if (!missingSkillSet.has(normalized) && matchedJdSkillSet.has(normalized)) {
+                status = 'strong';
+            }
+
+            return { skill, status };
+        });
+
+        const presentCount = skillItems.filter((item) => item.status !== 'missing').length;
+        const coverage = requiredSkills.length > 0 ? Math.round((presentCount / requiredSkills.length) * 100) : 0;
+
+        return {
+            category,
+            total: requiredSkills.length,
+            present: presentCount,
+            coverage,
+            skillItems,
+        };
+    }).filter((item) => item.total > 0).sort((a, b) => b.total - a.total);
+
+    const syntheticFallbackTiles = [
+        {
+            category: 'Exact Matches',
+            skillItems: (partition.exact_match || []).map((skill) => ({ skill: String(skill || ''), status: 'exact' })),
+        },
+        {
+            category: 'Strong Semantic',
+            skillItems: (partition.strong_semantic || []).map((item) => ({ skill: String(item?.similar_to || item?.skill || ''), status: 'strong' })),
+        },
+        {
+            category: 'Moderate Semantic',
+            skillItems: (partition.moderate_semantic || []).map((item) => ({ skill: String(item?.similar_to || item?.skill || ''), status: 'moderate' })),
+        },
+        {
+            category: 'Missing Skills',
+            skillItems: (missingFromResume || []).map((item) => ({ skill: String(item?.skill || ''), status: 'missing' })),
+        },
+    ].map((tile) => {
+        const cleanedItems = tile.skillItems
+            .map((entry) => ({ skill: String(entry.skill || '').trim(), status: entry.status }))
+            .filter((entry) => entry.skill.length > 0);
+        const total = cleanedItems.length;
+        const present = cleanedItems.filter((entry) => entry.status !== 'missing').length;
+        const coverage = total > 0 ? Math.round((present / total) * 100) : 0;
+        return {
+            category: tile.category,
+            total,
+            present,
+            coverage,
+            skillItems: cleanedItems,
+        };
+    }).filter((tile) => tile.total > 0);
+
+    const treemapTiles = (categorySkillBoxData.length > 0 ? categorySkillBoxData : syntheticFallbackTiles)
+        .sort((a, b) => b.total - a.total);
+
+    const maxCategoryTileSize = Math.max(1, ...treemapTiles.map((item) => item.total || 0));
+    const CATEGORY_SWATCHES = ['#1d4ed8', '#2563eb', '#3b82f6', '#0ea5e9', '#06b6d4', '#10b981', '#84cc16', '#f59e0b', '#f97316', '#ef4444'];
+
+    React.useEffect(() => {
+        if (!isOpen) {
+            setSkillsMapVisible(false);
+            return undefined;
+        }
+
+        const target = skillsMapRef.current;
+        const scrollRoot = visualScrollRef.current || null;
+        if (!target || typeof IntersectionObserver === 'undefined') {
+            setSkillsMapVisible(true);
+            return undefined;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setSkillsMapVisible(true);
+                    }
+                });
+            },
+            { threshold: 0.15, root: scrollRoot }
+        );
+
+        observer.observe(target);
+        return () => observer.disconnect();
+    }, [isOpen]);
+
+    const funnelData = [
+        { stage: 'JD Skills', value: summary.total_jd_skills, fill: '#6366f1' },
+        { stage: 'Exact', value: summary.exact_match_count, fill: '#10b981' },
+        { stage: 'Semantic', value: summary.semantic_match_count, fill: '#3b82f6' },
+        { stage: 'Missing', value: summary.missing_skills_count, fill: '#ef4444' },
+    ];
 
     // 5. Radar Chart (Profile)
     const radarData = Object.keys(resumeClusters).map(cat => ({
@@ -63,17 +242,6 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
         A: resumeClusters[cat].length,
         fullMark: Math.max(10, resumeClusters[cat].length + 2)
     }));
-
-    // Radar Conclusion Logic
-    let topSkillCategory = "Various Categories";
-    let isFocused = false;
-    let totalSkills = 0;
-    if (radarData.length > 0) {
-        const sortedRadar = [...radarData].sort((a, b) => b.A - a.A);
-        topSkillCategory = sortedRadar[0].subject;
-        isFocused = sortedRadar[0].A >= (sortedRadar[1]?.A || 0) * 1.5;
-        totalSkills = radarData.reduce((acc, curr) => acc + curr.A, 0);
-    }
 
     // 6. Extra Skills Badges
     const extraSkills = bertResults.extra_resume_skills || [];
@@ -147,9 +315,9 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                 </div>
 
                 {/* Dashboard Grid */}
-                <div style={{ padding: '2rem 3rem', display: 'flex', flexDirection: 'column', gap: '2rem', overflowY: 'auto', flex: 1, background: 'transparent' }}>
+                <div ref={visualScrollRef} className="visual-analytics-scroll" style={{ padding: '2rem 3rem', display: 'flex', flexDirection: 'column', gap: '2rem', flex: 1, background: 'transparent' }}>
 
-                    {/* Section 1: Executive Overview */}
+                    {/* Section 1: Executive Overview (Moved to top) */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
 
                         {/* 1. Alignment Gauge */}
@@ -204,36 +372,102 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                             </div>
                         </div>
 
-                        {/* 4. Missing Skills Priority (Moved up) */}
-                        <div className="content-card" style={{ background: '#1e293b', padding: '2rem', borderTop: `4px solid ${COLORS.danger}` }}>
-                            <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                                <AlertTriangle size={20} color={COLORS.danger} />
-                                Urgent Missing Priorities
-                            </h3>
-                            {missingPriorityData.length > 0 ? (
-                                <div style={{ height: 220, width: '100%' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={missingPriorityData} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
-                                            <XAxis type="number" hide />
-                                            <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 13, fontWeight: 600, fill: 'white' }} width={240} />
-                                            <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(value) => [value, 'JD Importance Weight']} />
-                                            <Bar dataKey="weight" name="Priority Weight" radius={[0, 6, 6, 0]} barSize={24}>
-                                                {
-                                                    missingPriorityData.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={COLORS.danger} fillOpacity={1 - (index * 0.15)} />
-                                                    ))
-                                                }
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            ) : (
-                                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.success, fontWeight: 'bold' }}>
-                                    🎉 No critical skills missing!
-                                </div>
-                            )}
+                    </div>
+
+                    {/* Phase 1: Executive Intelligence Strip */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '1rem' }}>
+                        <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #6366f1', padding: '1rem 1.15rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ color: '#93c5fd', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>📈</span><span>Weighted Coverage</span></span>
+                                <Gauge size={18} color="#60a5fa" />
+                            </div>
+                            <p style={{ margin: '0.5rem 0 0', color: '#ffffff', fontSize: '1.55rem', fontWeight: 900 }}>{weightedCoverageScore}%</p>
                         </div>
 
+                        <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #ef4444', padding: '1rem 1.15rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ color: '#fca5a5', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>🔥</span><span>Weighted Risk Index</span></span>
+                                <ShieldAlert size={18} color="#f87171" />
+                            </div>
+                            <p style={{ margin: '0.5rem 0 0', color: '#ffffff', fontSize: '1.55rem', fontWeight: 900 }}>{weightedRiskIndex}</p>
+                        </div>
+
+                        <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #f59e0b', padding: '1rem 1.15rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ color: '#fcd34d', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>⚠️</span><span>Critical Missing</span></span>
+                                <AlertTriangle size={18} color="#fbbf24" />
+                            </div>
+                            <p style={{ margin: '0.5rem 0 0', color: '#ffffff', fontSize: '1.55rem', fontWeight: 900 }}>{criticalMissingCount}</p>
+                        </div>
+
+                        <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #22c55e', padding: '1rem 1.15rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ color: '#86efac', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>✨</span><span>Semantic Reliability</span></span>
+                                <GitCompareArrows size={18} color="#4ade80" />
+                            </div>
+                            <p style={{ margin: '0.5rem 0 0', color: '#ffffff', fontSize: '1.55rem', fontWeight: 900 }}>{semanticReliability}%</p>
+                        </div>
+                    </div>
+
+                    {/* Phase 1: Match Progression */}
+                    <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', borderTop: `4px solid ${COLORS.info}` }}>
+                        <h3 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
+                            <Target size={20} color={COLORS.info} />
+                            Match Funnel View
+                        </h3>
+                        <div style={{ height: 290, width: '100%' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={funnelData} margin={{ top: 8, right: 20, left: 0, bottom: 30 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
+                                    <XAxis dataKey="stage" tick={{ fill: '#f8fafc', fontSize: 12, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                    <YAxis allowDecimals={false} tick={{ fill: '#e2e8f0', fontSize: 12 }} axisLine={false} tickLine={false} />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Bar dataKey="value" name="Skills" radius={[8, 8, 0, 0]}>
+                                        {funnelData.map((entry, idx) => (
+                                            <Cell key={`fn-${entry.stage}-${idx}`} fill={entry.fill} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Phase 1: Category Risk Heatmap */}
+                    <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', borderTop: `4px solid ${COLORS.warning}` }}>
+                        <h3 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
+                            <Layers size={20} color={COLORS.warning} />
+                            Category Risk Heatmap
+                        </h3>
+                        <div style={{ border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(170px, 1.8fr) repeat(3, minmax(110px, 1fr))', background: '#0b1222', borderBottom: '1px solid #334155' }}>
+                                <div style={{ padding: '0.55rem 0.7rem', color: '#93a5c9', fontSize: '0.73rem', fontWeight: 800, textTransform: 'uppercase' }}>Category</div>
+                                <div style={{ padding: '0.55rem 0.6rem', color: '#93a5c9', fontSize: '0.73rem', fontWeight: 800, textTransform: 'uppercase' }}>Coverage %</div>
+                                <div style={{ padding: '0.55rem 0.6rem', color: '#93a5c9', fontSize: '0.73rem', fontWeight: 800, textTransform: 'uppercase' }}>Missing Count</div>
+                                <div style={{ padding: '0.55rem 0.6rem', color: '#93a5c9', fontSize: '0.73rem', fontWeight: 800, textTransform: 'uppercase' }}>Risk Weight</div>
+                            </div>
+
+                            {categoryHeatmapRows.map((row, idx) => {
+                                const coverageAlpha = 0.12 + (row.coveragePct / 100) * 0.62;
+                                const missingAlpha = 0.12 + ((row.missingCount || 0) / maxMissingValue) * 0.62;
+                                const riskAlpha = 0.12 + ((row.weightedRisk || 0) / maxRiskValue) * 0.62;
+
+                                return (
+                                    <div key={`${row.category}-${idx}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(170px, 1.8fr) repeat(3, minmax(110px, 1fr))', borderBottom: idx === categoryHeatmapRows.length - 1 ? 'none' : '1px solid #334155', background: '#0f172a' }}>
+                                        <div style={{ padding: '0.58rem 0.7rem', color: '#e2e8f0', fontSize: '0.82rem', fontWeight: 700 }}>{row.category}</div>
+                                        <div style={{ padding: '0.58rem 0.6rem', background: `rgba(34,197,94,${coverageAlpha})`, color: '#dcfce7', fontWeight: 800, fontSize: '0.8rem' }}>{row.coveragePct}%</div>
+                                        <div style={{ padding: '0.58rem 0.6rem', background: `rgba(245,158,11,${missingAlpha})`, color: '#fef3c7', fontWeight: 800, fontSize: '0.8rem' }}>{row.missingCount}</div>
+                                        <div style={{ padding: '0.58rem 0.6rem', background: `rgba(239,68,68,${riskAlpha})`, color: '#fee2e2', fontWeight: 800, fontSize: '0.8rem' }}>{row.weightedRisk}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.8rem' }}>
+                            <span style={{ color: '#94a3b8', fontSize: '0.74rem', fontWeight: 700 }}>Color intensity indicates magnitude.</span>
+                            <span style={{ color: '#86efac', fontSize: '0.74rem', fontWeight: 700 }}>Green: stronger coverage</span>
+                            <span style={{ color: '#fcd34d', fontSize: '0.74rem', fontWeight: 700 }}>Amber: more missing skills</span>
+                            <span style={{ color: '#fca5a5', fontSize: '0.74rem', fontWeight: 700 }}>Red: higher weighted risk</span>
+                        </div>
                     </div>
 
                     {/* Section 2: Deep Category Analysis */}
@@ -266,40 +500,21 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                                 <Activity size={20} color={COLORS.success} />
                                 Resume Expertise Profile
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 2fr) minmax(300px, 1fr)', gap: '2rem', marginTop: '1rem', flex: 1, minHeight: 450 }}>
-                                <div style={{ width: '100%', height: '100%' }}>
-                                    {radarData.length >= 3 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                                                <PolarGrid gridType="circle" stroke="#334155" />
-                                                <PolarAngleAxis dataKey="subject" tick={{ fill: 'white', fontSize: 13, fontWeight: 600 }} />
-                                                <Radar name="Resume Expertise" dataKey="A" stroke={COLORS.success} strokeWidth={2} fill={COLORS.success} fillOpacity={0.4} />
-                                                <Tooltip content={<CustomTooltip />} />
-                                            </RadarChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>
-                                            Not enough distinct categories mapped for radar visualization (Need ≥ 3).
-                                        </div>
-                                    )}
-                                </div>
-                                {/* Radar Conclusion Sidebar */}
-                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '2rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid #334155' }}>
-                                    <h4 style={{ color: COLORS.success, fontSize: '1.2rem', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Target size={20} /> Analysis Conclusion
-                                    </h4>
-                                    {radarData.length >= 3 ? (
-                                        <p style={{ color: '#cbd5e1', fontSize: '1.05rem', lineHeight: 1.6, margin: 0 }}>
-                                            Based on the semantic extraction of <strong style={{ color: 'white' }}>{totalSkills}</strong> categorizable skills, the candidate's expertise is heavily anchored in <strong style={{ color: 'white' }}>{topSkillCategory}</strong>.
-                                            <br /><br />
-                                            This distribution suggests a <strong style={{ color: COLORS.info }}>{isFocused ? 'highly specialized' : 'well-rounded'}</strong> professional profile across the required functional areas.
-                                        </p>
-                                    ) : (
-                                        <p style={{ color: '#94a3b8', fontSize: '1.05rem', fontStyle: 'italic', margin: 0 }}>
-                                            Insufficient data to form a conclusive profile.
-                                        </p>
-                                    )}
-                                </div>
+                            <div style={{ marginTop: '1rem', minHeight: 450, width: '100%' }}>
+                                {radarData.length >= 3 ? (
+                                    <ResponsiveContainer width="100%" height={450}>
+                                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                                            <PolarGrid gridType="circle" stroke="#334155" />
+                                            <PolarAngleAxis dataKey="subject" tick={{ fill: 'white', fontSize: 13, fontWeight: 600 }} />
+                                            <Radar name="Resume Expertise" dataKey="A" stroke={COLORS.success} strokeWidth={2} fill={COLORS.success} fillOpacity={0.4} />
+                                            <Tooltip content={<CustomTooltip />} />
+                                        </RadarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>
+                                        Not enough distinct categories mapped for radar visualization (Need ≥ 3).
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -345,7 +560,7 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                                 {/* 90-100% Column */}
                                 <div style={{ display: 'flex', flexDirection: 'column', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' }}>
                                     <div style={{ background: '#10b98115', padding: '0.75rem', borderBottom: '2px solid #10b981', textAlign: 'center', fontWeight: 'bold', color: '#34d399', fontSize: '0.85rem' }}>90-100% Match</div>
-                                    <div style={{ maxHeight: '220px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ maxHeight: '260px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         {allMatches.filter(s => s.score >= 0.9).length > 0 ? allMatches.filter(s => s.score >= 0.9).map((match, i) => (
                                             <div key={i} style={{ background: '#1e293b', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid #10b981`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ fontWeight: '600', color: 'white', fontSize: '0.85rem' }}>{match.skill}</span>
@@ -358,7 +573,7 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                                 {/* 80-89% Column */}
                                 <div style={{ display: 'flex', flexDirection: 'column', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' }}>
                                     <div style={{ background: '#3b82f615', padding: '0.75rem', borderBottom: '2px solid #3b82f6', textAlign: 'center', fontWeight: 'bold', color: '#60a5fa', fontSize: '0.85rem' }}>80-89% Match</div>
-                                    <div style={{ maxHeight: '220px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ maxHeight: '260px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         {allMatches.filter(s => s.score >= 0.8 && s.score < 0.9).length > 0 ? allMatches.filter(s => s.score >= 0.8 && s.score < 0.9).map((match, i) => (
                                             <div key={i} style={{ background: '#1e293b', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid #3b82f6`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ fontWeight: '600', color: 'white', fontSize: '0.85rem' }}>{match.skill}</span>
@@ -371,7 +586,7 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                                 {/* 70-79% Column */}
                                 <div style={{ display: 'flex', flexDirection: 'column', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' }}>
                                     <div style={{ background: '#f59e0b15', padding: '0.75rem', borderBottom: '2px solid #f59e0b', textAlign: 'center', fontWeight: 'bold', color: '#fbbf24', fontSize: '0.85rem' }}>70-79% Match</div>
-                                    <div style={{ maxHeight: '220px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ maxHeight: '260px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         {allMatches.filter(s => s.score >= 0.7 && s.score < 0.8).length > 0 ? allMatches.filter(s => s.score >= 0.7 && s.score < 0.8).map((match, i) => (
                                             <div key={i} style={{ background: '#1e293b', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid #f59e0b`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ fontWeight: '600', color: 'white', fontSize: '0.85rem' }}>{match.skill}</span>
@@ -384,7 +599,7 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                                 {/* Below 70% Column */}
                                 <div style={{ display: 'flex', flexDirection: 'column', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' }}>
                                     <div style={{ background: '#ef444415', padding: '0.75rem', borderBottom: '2px solid #ef4444', textAlign: 'center', fontWeight: 'bold', color: '#f87171', fontSize: '0.85rem' }}>Below 70%</div>
-                                    <div style={{ maxHeight: '220px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ maxHeight: '260px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         {allMatches.filter(s => s.score < 0.7).length > 0 ? allMatches.filter(s => s.score < 0.7).map((match, i) => (
                                             <div key={i} style={{ background: '#1e293b', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid #ef4444`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ fontWeight: '600', color: 'white', fontSize: '0.85rem' }}>{match.skill}</span>
@@ -398,7 +613,86 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                         </div>
                     </div>
 
-                    {/* Section 4: Additional Information */}
+                    {/* Section 4: Category Skill Box Matrix */}
+                    <div
+                        ref={skillsMapRef}
+                        className={`content-card category-skill-map ${skillsMapVisible ? 'is-visible' : ''}`}
+                        style={{
+                            background: 'linear-gradient(180deg, #141d2e 0%, #0f172a 100%)',
+                            borderTop: '4px solid #0ea5e9',
+                            padding: '1.5rem'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0' }}>
+                                <Layers size={20} color="#38bdf8" />
+                                Domain Category Skill Boxes
+                            </h3>
+                            <div className="category-skill-legend">
+                                <span className="legend-chip legend-exact">Exact</span>
+                                <span className="legend-chip legend-strong">Strong</span>
+                                <span className="legend-chip legend-moderate">Moderate</span>
+                                <span className="legend-chip legend-missing">Missing</span>
+                            </div>
+                        </div>
+
+                        <p style={{ margin: '0.5rem 0 1rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+                            Treemap layout: larger tiles represent larger skill categories, and inner partitions represent individual skill names with match status colors.
+                        </p>
+                        <p style={{ margin: '0 0 0.8rem', color: '#7dd3fc', fontSize: '0.8rem', fontWeight: 700 }}>
+                            Showing {treemapTiles.length} categories in this run.
+                        </p>
+
+                        <div className="category-skill-grid">
+                            {treemapTiles.length > 0 ? (
+                                treemapTiles.map((item, categoryIndex) => {
+                                    const ratio = item.total / maxCategoryTileSize;
+                                    const colSpan = Math.max(3, Math.min(5, Math.round(2 + (ratio * 3))));
+                                    const categoryBorder = item.coverage >= 75
+                                        ? 'rgba(16,185,129,0.55)'
+                                        : item.coverage >= 45
+                                            ? 'rgba(59,130,246,0.55)'
+                                            : 'rgba(239,68,68,0.55)';
+                                    const swatch = CATEGORY_SWATCHES[categoryIndex % CATEGORY_SWATCHES.length];
+
+                                    return (
+                                    <div
+                                        key={`${item.category}-${categoryIndex}`}
+                                        className="category-box"
+                                        style={{
+                                            '--fall-delay': `${categoryIndex * 85}ms`,
+                                            '--tile-col-span': colSpan,
+                                            borderColor: categoryBorder,
+                                            background: `linear-gradient(180deg, ${swatch}22 0%, #13233d 84%)`,
+                                        }}
+                                    >
+                                        <div className="category-box-header">
+                                            <h4>{item.category}</h4>
+                                            <span>{item.present}/{item.total} • {item.coverage}%</span>
+                                        </div>
+
+                                        <div className="skill-mini-grid">
+                                            {item.skillItems.map((skillItem, skillIndex) => (
+                                                <div
+                                                    key={`${item.category}-${skillItem.skill}-${skillIndex}`}
+                                                    className={`skill-mini-box ${skillItem.status}`}
+                                                    style={{ '--fall-delay': `${(categoryIndex * 85) + (skillIndex * 22)}ms` }}
+                                                    title={`${skillItem.skill} (${skillItem.status})`}
+                                                >
+                                                    {skillItem.skill}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                                })
+                            ) : (
+                                <div style={{ color: '#94a3b8', fontStyle: 'italic' }}>No category/skill map available for this run.</div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Section 5: Additional Information */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 1fr)', gap: '2rem' }}>
                         {/* 6. Extra Skills Cloud */}
                         <div className="content-card" style={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', padding: '2.5rem', borderTop: `4px solid ${COLORS.warning}` }}>

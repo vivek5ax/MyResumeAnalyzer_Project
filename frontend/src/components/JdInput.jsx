@@ -11,13 +11,13 @@ const JdInput = ({ onFileSelect, onTextChange, selectedFile }) => {
                     className={`tab-btn ${activeTab === 'file' ? 'active' : ''}`}
                     onClick={() => setActiveTab('file')}
                 >
-                    Upload File
+                    Upload Document
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
                     onClick={() => setActiveTab('text')}
                 >
-                    Paste Text
+                    Paste Description
                 </button>
             </div>
 
@@ -29,6 +29,7 @@ const JdInput = ({ onFileSelect, onTextChange, selectedFile }) => {
                                 onFileSelect(file);
                                 onTextChange(""); // Clear text if file selected
                             }}
+                            selectedFile={selectedFile}
                             accept=".pdf,.docx,.txt"
                             label="Job Description"
                         />
@@ -37,7 +38,7 @@ const JdInput = ({ onFileSelect, onTextChange, selectedFile }) => {
                 ) : (
                     <textarea
                         className="modern-input"
-                        placeholder="Paste the Job Description text here..."
+                        placeholder="Paste the full job description text here for analysis..."
                         onChange={(e) => {
                             onTextChange(e.target.value);
                             onFileSelect(null); // Clear file if text entered

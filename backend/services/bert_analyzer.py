@@ -1,11 +1,9 @@
 import spacy
 import re
-import hashlib
 from sentence_transformers import SentenceTransformer, util
 import torch
 import os
 from .taxonomy_loader import load_taxonomy, BASE_PATH
-import re
 
 # Load spaCy strictly for semantic sentence splitting boundaries
 nlp = spacy.load("en_core_web_sm", disable=["ner", "tagger", "lemmatizer", "textcat"]) # Parser needed for sentence segmenting
@@ -25,6 +23,91 @@ DOMAIN_MTIME = {}
 DETECTION_THRESHOLD = 0.55
 STRONG_SIMILARITY_THRESHOLD = 0.72
 MODERATE_SIMILARITY_THRESHOLD = 0.60
+
+DOMAIN_SIMILARITY_THRESHOLDS = {
+    "software": {"strong": 0.72, "moderate": 0.60},
+    "medical": {"strong": 0.74, "moderate": 0.62},
+    "finance": {"strong": 0.74, "moderate": 0.62},
+    "marketing": {"strong": 0.70, "moderate": 0.58},
+    "human_resources": {"strong": 0.70, "moderate": 0.58},
+    "hr": {"strong": 0.70, "moderate": 0.58},
+    "electrical": {"strong": 0.73, "moderate": 0.61},
+}
+
+
+def _normalize_spaces(text: str) -> str:
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
+def _extract_snippet(text: str, needle: str, radius: int = 100) -> str:
+    """Return a short context snippet around first skill occurrence."""
+    source = text or ""
+    if not source.strip() or not needle:
+        return ""
+
+    pattern = re.compile(rf"\b{re.escape(needle)}\b", re.IGNORECASE)
+    match = pattern.search(source)
+    if not match:
+        return ""
+
+    start = max(0, match.start() - radius)
+    end = min(len(source), match.end() + radius)
+    snippet = source[start:end]
+    snippet = _normalize_spaces(snippet)
+
+    return snippet
+
+
+def _build_match_evidence(partition: dict, missing: list, jd_text: str, resume_text: str, limit: int = 24) -> list:
+    evidence = []
+
+    for skill in partition.get("exact_match", []):
+        evidence.append({
+            "skill": skill,
+            "match_type": "exact",
+            "confidence": 1.0,
+            "jd_skill": skill,
+            "resume_skill": skill,
+            "jd_snippet": _extract_snippet(jd_text, skill),
+            "resume_snippet": _extract_snippet(resume_text, skill),
+        })
+
+    for item in partition.get("strong_semantic", []):
+        evidence.append({
+            "skill": item.get("similar_to"),
+            "match_type": "strong_semantic",
+            "confidence": float(item.get("score", 0.0)),
+            "jd_skill": item.get("similar_to"),
+            "resume_skill": item.get("skill"),
+            "jd_snippet": _extract_snippet(jd_text, item.get("similar_to", "")),
+            "resume_snippet": _extract_snippet(resume_text, item.get("skill", "")),
+        })
+
+    for item in partition.get("moderate_semantic", []):
+        evidence.append({
+            "skill": item.get("similar_to"),
+            "match_type": "moderate_semantic",
+            "confidence": float(item.get("score", 0.0)),
+            "jd_skill": item.get("similar_to"),
+            "resume_skill": item.get("skill"),
+            "jd_snippet": _extract_snippet(jd_text, item.get("similar_to", "")),
+            "resume_snippet": _extract_snippet(resume_text, item.get("skill", "")),
+        })
+
+    for item in missing:
+        evidence.append({
+            "skill": item.get("skill"),
+            "match_type": "missing",
+            "confidence": 0.0,
+            "jd_skill": item.get("skill"),
+            "resume_skill": None,
+            "jd_snippet": _extract_snippet(jd_text, item.get("skill", "")),
+            "resume_snippet": "",
+            "weight": item.get("weight", 1.0),
+        })
+
+    evidence.sort(key=lambda item: item.get("confidence", 0), reverse=True)
+    return evidence[:limit]
 
 
 def get_domain_embeddings(domain: str):
@@ -84,7 +167,7 @@ def sanitize_resume_text(text: str) -> str:
     return text
 
 
-def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, resume_text: str, domain: str = "software", threshold: float = 0.50):
+def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, resume_text: str, domain: str = "software", threshold: float = 0.50, jd_text: str = ""):
     """
     Advanced semantic partitioning analysis comparing JD Requirements vs Resume Profile.
     Outputs strict analytical categorization for UI consumption.
@@ -95,6 +178,14 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
     
     taxonomy_data = load_taxonomy(domain)
     skills_flat = taxonomy_data["skills_flat"]
+
+    domain_key = domain.lower().replace(" ", "_")
+    threshold_profile = DOMAIN_SIMILARITY_THRESHOLDS.get(domain_key, {
+        "strong": STRONG_SIMILARITY_THRESHOLD,
+        "moderate": MODERATE_SIMILARITY_THRESHOLD,
+    })
+    strong_base = threshold_profile["strong"]
+    moderate_base = max(threshold_profile["moderate"], float(threshold))
     
     jd_skills = [s.lower() for s in raw_jd_displays]
     jd_embeddings = model.encode(jd_skills, convert_to_tensor=True, normalize_embeddings=True, device=device) if jd_skills else None
@@ -127,7 +218,8 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
             "missing_from_resume": [],
             "extra_resume_skills": raw_resume_displays,
             "jd_skill_clusters": {},
-            "resume_skill_clusters": {}
+            "resume_skill_clusters": {},
+            "match_evidence": []
         }
 
     # Evaluate Extracted Resume Skills
@@ -152,11 +244,11 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
             
             token_len = len(r_skill.split())
             if token_len <= 2:
-                strong_adj = STRONG_SIMILARITY_THRESHOLD - 0.05
-                moderate_adj = MODERATE_SIMILARITY_THRESHOLD - 0.05
+                strong_adj = strong_base - 0.05
+                moderate_adj = moderate_base - 0.05
             else:
-                strong_adj = STRONG_SIMILARITY_THRESHOLD
-                moderate_adj = MODERATE_SIMILARITY_THRESHOLD
+                strong_adj = strong_base
+                moderate_adj = moderate_base
                 
             aliases_map = taxonomy_data.get("aliases_map", {})
             if r_skill in aliases_map:
@@ -179,7 +271,9 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
     
     matched_jd_lowered = set([s.lower() for s in partition["exact_match"]])
     for d in partition["strong_semantic"]:
-       matched_jd_lowered.add(d["similar_to"].lower())
+        matched_jd_lowered.add(d["similar_to"].lower())
+    for d in partition["moderate_semantic"]:
+        matched_jd_lowered.add(d["similar_to"].lower())
 
     # Fallback to Raw Text Analysis for Missing JD Skills
     missing_candidates = [display for display in raw_jd_displays if display.lower() not in matched_jd_lowered]
@@ -219,7 +313,7 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
                 if has_exact:
                     partition["exact_match"].append(candidate)
                     matched_jd_lowered.add(candidate_lower)
-                elif max_sim >= STRONG_SIMILARITY_THRESHOLD and has_exact:
+                elif max_sim >= strong_base:
                     partition["strong_semantic"].append({
                         "skill": candidate,
                         "similar_to": candidate,
@@ -281,6 +375,8 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
     else:
         overall_score = 0.0
 
+    evidence_items = _build_match_evidence(partition, missing_from_resume, jd_text, resume_text)
+
     return {
          "summary": {
             "total_jd_skills": len(raw_jd_displays),
@@ -294,5 +390,6 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
         "missing_from_resume": missing_from_resume,
         "extra_resume_skills": partition["irrelevant"],
         "jd_skill_clusters": jd_clusters,
-        "resume_skill_clusters": resume_clusters
+        "resume_skill_clusters": resume_clusters,
+        "match_evidence": evidence_items
     }

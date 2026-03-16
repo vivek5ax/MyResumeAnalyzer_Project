@@ -1,8 +1,8 @@
 {
     "_meta": {
         "domain": "finance",
-        "version": "3.0-alias-enhanced",
-        "last_updated": "2024-03-01"
+        "version": "3.1-alias-enhanced",
+        "last_updated": "2026-03-11"
     },
     "categories": {
         "Financial Analysis & Modeling": {
@@ -25,7 +25,10 @@
                         "FP&A",
                         "Financial Planning & Analysis",
                         "Ratio Analysis",
-                        "Trend Analysis"
+                        "Trend Analysis",
+                        "P&L Analysis",
+                        "Profit and Loss Analysis",
+                        "Cash Flow Forecasting"
                     ]
                 },
                 {
@@ -132,7 +135,8 @@
                         "KYC",
                         "Know Your Customer",
                         "Basel III",
-                        "Dodd-Frank"
+                        "Dodd-Frank",
+                        "Regulatory Reporting"
                     ]
                 }
             ]
@@ -165,7 +169,10 @@
                         "Advanced Excel",
                         "VBA",
                         "Power Query",
-                        "Macros"
+                        "Macros",
+                        "MIS Reporting",
+                        "Power BI",
+                        "Tableau"
                     ]
                 }
             ]

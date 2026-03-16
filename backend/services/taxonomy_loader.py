@@ -132,6 +132,11 @@ def load_taxonomy(domain: str) -> dict:
                 # Map incoming aliases to the normalized canonical name directly
                 for alias in aliases:
                     norm_alias = normalize_skill(alias)
+                    if norm_alias in aliases_map and aliases_map[norm_alias] != norm_name:
+                        logger.warning(
+                            f"Alias collision for '{alias}' ({norm_alias}) between '{aliases_map[norm_alias]}' and '{norm_name}'. Preserving first mapping."
+                        )
+                        continue
                     aliases_map[norm_alias] = norm_name
                     
                 # Append to merged category for simple UI representation if not already explicitly present

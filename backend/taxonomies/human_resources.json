@@ -1,12 +1,12 @@
 {
     "_meta": {
-        "domain": "hr",
-        "version": "3.0-alias-enhanced",
-        "last_updated": "2024-03-01"
+        "domain": "human_resources",
+        "version": "3.1-alias-enhanced",
+        "last_updated": "2026-03-11"
     },
     "categories": {
         "Talent Acquisition & Recruiting": {
-            "weight": 1.5,
+            "weight": 1.4,
             "skills": [
                 {
                     "name": "Full-Cycle Recruiting",
@@ -39,7 +39,7 @@
             ]
         },
         "Employee Relations & Engagement": {
-            "weight": 1.4,
+            "weight": 1.35,
             "skills": [
                 {
                     "name": "Employee Relations",
@@ -107,7 +107,7 @@
             ]
         },
         "HR Operations & Strategy": {
-            "weight": 1.4,
+            "weight": 1.35,
             "skills": [
                 {
                     "name": "Performance Management",
@@ -148,6 +148,21 @@
                         "ADA",
                         "Labor Compliance",
                         "HR Policies"
+                    ]
+                },
+                {
+                    "name": "People Analytics",
+                    "aliases": [
+                        "HR Analytics",
+                        "Workforce Analytics",
+                        "People Data"
+                    ]
+                },
+                {
+                    "name": "Workforce Planning",
+                    "aliases": [
+                        "Headcount Planning",
+                        "Succession Planning"
                     ]
                 }
             ]

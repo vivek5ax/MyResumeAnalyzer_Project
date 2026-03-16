@@ -1,13 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { CheckCircle, X, FileText, FileSearch, BrainCircuit, Sparkles, BarChart3 } from 'lucide-react';
 import SkillsModal from './SkillsModal';
 import BertModal from './BertModal';
 import VisualizationModal from './VisualizationModal';
 
-const Preview = ({ data }) => {
+const Preview = ({ data, hideActions = false }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
     const [isBertModalOpen, setIsBertModalOpen] = useState(false);
@@ -136,117 +134,119 @@ const Preview = ({ data }) => {
 
     return (
         <div className="fade-in" style={{
-            marginTop: '3.5rem',
-            paddingTop: '2.5rem',
-            borderTop: '1px solid rgba(255,255,255,0.1)'
+            marginTop: '2.5rem',
+            paddingTop: '1.5rem',
+            borderTop: '1px solid #e2e7f0'
         }}>
             <div style={{
-                background: 'rgba(16, 185, 129, 0.05)',
-                borderRadius: '24px',
-                border: '1px solid rgba(16, 185, 129, 0.15)',
-                padding: '2rem',
+                background: '#ffffff',
+                borderRadius: '18px',
+                border: '1px solid #e2e7f0',
+                padding: '1.4rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '2rem'
+                gap: '1.25rem'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                     <div style={{
-                        background: '#10b981',
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '14px',
+                        background: 'linear-gradient(135deg, #6a72ee 0%, #5863e7 100%)',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '10px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: '0 8px 16px -4px rgba(16, 185, 129, 0.4)'
+                        border: '1px solid #5e67e8'
                     }}>
-                        <CheckCircle color="white" size={24} />
+                        <CheckCircle color="#ffffff" size={22} />
                     </div>
                     <div>
-                        <h3 style={{ margin: 0, color: 'white', fontSize: '1.4rem', fontWeight: '800' }}>Extraction Successful</h3>
-                        <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '1rem' }}>Smart semantic analysis complete. Choose an action below to explore the results.</p>
+                        <h3 style={{ margin: 0, color: '#1f2632', fontSize: '1.15rem', fontWeight: '800' }}>Assessment Completed</h3>
+                        <p style={{ margin: '4px 0 0', color: '#778095', fontSize: '0.95rem' }}>The analysis package is ready for review, visualization, and export.</p>
                     </div>
                 </div>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                    gap: '1.25rem'
-                }}>
+                {!hideActions && (
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                        gap: '0.85rem'
+                    }}>
                     <button className="btn" onClick={handlePrint} disabled={isGeneratingPDF} style={{
                         gridColumn: '1 / -1', // Make this span all columns to stand out
-                        padding: '1.1rem',
-                        fontSize: '1rem',
+                        padding: '0.95rem',
+                        fontSize: '0.95rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.75rem',
-                        background: isGeneratingPDF ? '#64748b' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        boxShadow: isGeneratingPDF ? 'none' : '0 10px 15px -3px rgba(16, 185, 129, 0.3)',
+                        background: isGeneratingPDF ? '#9ca3af' : 'linear-gradient(135deg, #666fea 0%, #5963e8 100%)',
+                        boxShadow: isGeneratingPDF ? 'none' : '0 10px 16px -8px rgba(90, 99, 232, 0.5)',
                         border: 'none',
                         color: 'white',
                         fontWeight: 'bold',
                         cursor: isGeneratingPDF ? 'wait' : 'pointer'
                     }}>
                         <FileText size={20} />
-                        {isGeneratingPDF ? 'Generating High-Quality Executive PDF...' : 'Download Executive PDF Report'}
+                        {isGeneratingPDF ? 'Generating Executive PDF...' : 'Download Executive PDF Report'}
                     </button>
                     <button className="btn" onClick={openVizModal} style={{
-                        padding: '1.1rem',
-                        fontSize: '1rem',
+                        padding: '0.9rem',
+                        fontSize: '0.92rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.75rem',
-                        background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
-                        boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)',
+                        background: '#6b73ef',
+                        boxShadow: '0 8px 14px -10px rgba(90, 99, 232, 0.48)',
                         border: 'none'
                     }}>
                         <BarChart3 size={20} />
-                        Visual Analysis
+                        Visual Analytics
                     </button>
                     <button className="btn" onClick={openBertModal} style={{
-                        padding: '1.1rem',
-                        fontSize: '1rem',
+                        padding: '0.9rem',
+                        fontSize: '0.92rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.75rem',
-                        background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
-                        boxShadow: '0 10px 15px -3px rgba(14, 165, 233, 0.3)',
+                        background: '#5d66e8',
+                        boxShadow: '0 8px 14px -10px rgba(90, 99, 232, 0.48)',
                         border: 'none'
                     }}>
                         <Sparkles size={20} />
-                        BERT Analysis
+                        Semantic Analysis
                     </button>
                     <button className="btn" onClick={openSkillsModal} style={{
-                        padding: '1.1rem',
-                        fontSize: '1rem',
+                        padding: '0.9rem',
+                        fontSize: '0.92rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.75rem',
-                        background: 'linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)',
-                        boxShadow: '0 10px 15px -3px rgba(6, 182, 212, 0.3)',
+                        background: '#7078f1',
+                        boxShadow: '0 8px 14px -10px rgba(90, 99, 232, 0.48)',
                         border: 'none'
                     }}>
                         <BrainCircuit size={20} />
-                        Skills Extracted
+                        Skills Mapping
                     </button>
                     <button className="btn" onClick={openModal} style={{
-                        padding: '1.1rem',
-                        fontSize: '1rem',
+                        padding: '0.9rem',
+                        fontSize: '0.92rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.75rem',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        color: '#cbd5e1'
+                        background: '#f6f8fc',
+                        border: '1px solid #dce2ec',
+                        color: '#2f3748'
                     }}>
                         <FileSearch size={20} />
-                        View Full Content
+                        Source Content
                     </button>
-                </div>
+                    </div>
+                )}
             </div>
 
             {isModalOpen && ReactDOM.createPortal(modalContent, document.body)}
