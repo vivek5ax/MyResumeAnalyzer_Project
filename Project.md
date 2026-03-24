@@ -76,7 +76,128 @@ The system then compares the arrays of required Job Description skills against t
 
 1. **Vector Embeddings generation**: It uses `SentenceTransformer('all-MiniLM-L6-v2')` to mathematically encode the missing Job Description skills into dense mathematical vectors (768 dimensions).
 2. **Resume Chunking**: It takes the *Raw Text* format of the resume and uses spaCy to cleanly segment the document into individual grammatical sentences. It translates every sentence of the resume into mathematical vectors as well.
-3. **Cosine Similarity**: It calculates the mathematical distance (Cosine Similarity) between the required skill vectors and the candidate's resume sentence vectors. 
+3. **Cosine Similarity**: It calculates the mathematical distance (Cosine Similarity) between the required skill vectors and the candidate's resume sentence vectors.
+
+---
+
+## 📊 Stage 3: Professional PDF Report Generation
+
+After analysis is complete, the system generates a **Comprehensive Professional PDF Report** with embedded visualizations, AI-generated insights, emoji decorators, and card-based layouts:
+
+### 📋 Report Structure (4 Pages)
+
+**Page 1: Executive Overview**
+- 📊 Overall Alignment Score with color-coded gauge chart (Red/Orange/Yellow/Green)
+- 🎯 Key Metrics Card Table (Exact, Semantic, Missing, Total Matched)
+- 📝 Executive Summary with correlation-based interpretation
+- 👤 Candidate/Position/Domain/Date metadata with emoji indicators
+
+**Page 2: Skill Analysis Visualizations**
+- 📈 Pie Chart: Skill match distribution (Exact vs Semantic vs Missing)
+- 📊 Bar Chart: Category-wise comparison (JD Requirements vs Resume Skills)
+- 📉 Histogram: Semantic confidence score distribution
+- All charts embedded as high-quality PNG images with proper sizing
+
+**Page 3: Detailed Skills Breakdown**
+- ✅ **Exact Matched Skills**: Complete list with color highlighting (#10b981)
+- 🔗 **Strong Semantic Matches**: Skills with 0.72+ confidence scores and individual scores
+- 🟡 **Moderate Semantic Matches**: Skills with 0.60-0.72 confidence scores
+- ⚠️ **Critical Missing Skills**: Priority-flagged (🔴 Role Critical, 🟠 Important, 🟡 Desired)
+
+**Page 4: AI Insights & Recommendations**
+- 🤖 **AI-Generated Interview Focus Areas**: Top 4 focus points from LLM analysis
+- 🔄 **Skill Normalization Insights**: Alias mappings and skill relationships
+- 💪 **Key Strengths**: Quantified alignment metrics and readiness indicators
+- 🎯 **Development Areas**: Gap analysis and ramp-up timeline estimates
+- 🏆 **Final Hiring Recommendation**: Algorithmic decision (🟢 Strong Yes / 🟡 Yes / 🟠 Consider / 🔴 Pass)
+
+### 🎨 Visual Design Features
+
+**Color Palette:**
+- ✅ Success Green: #10b981 (Exact matches, positive indicators)
+- 🔗 Info Blue: #3b82f6 (Semantic matches, information)
+- 🟡 Warning Orange: #f59e0b (Moderate confidence, caution)
+- 🟠 Alert: #f97316 (Warnings, development needed)
+- ⚠️ Danger Red: #ef4444 (Missing/critical gaps)
+- 🎨 Neutral Grays: #e2e8f0, #f1f5f9, #f8fafc (Backgrounds)
+
+**Typography Hierarchy:**
+- Title: 28pt Bold (#0f172a)
+- Headers (H2): 15pt Bold (#1e293b)
+- Subheaders (H3): 11pt Bold (#334155)
+- Body: 9.5pt Justified (#334155)
+- Card Text: 9pt (#334155)
+
+**Card-Based Layouts:**
+- Colored card containers for skill sections with proper spacing
+- Alternating row backgrounds for tables (#f1f5f9 and white)
+- 1.5px bordered grids with subtle color coding
+- Proper padding and margins for visual breathing room
+
+### 🤖 AI Content Integration
+
+**Enrichment Features:**
+- 📖 **Summary Analysis**: AI-generated overview from LLM (up to 500 chars)
+- 🎤 **Interview Questions**: Top 4 suggested interview focus areas
+- 🔄 **Skill Mapper**: Alias mappings and skill relationship insights
+- 📋 **Gap Triage**: Prioritized missing skills with context
+- ✨ **Quality Metrics**: Hallucination risk assessment, coverage score, warnings
+
+### 📊 Visualization Capabilities
+
+**Chart Functions:**
+1. `_create_skill_match_chart()` - Pie chart with dynamic sizing (4.5×3.5")
+2. `_create_category_heatmap()` - Bar chart with labeled values (6×3.5")
+3. `_create_alignment_gauge()` - Colored gauge with interpretation (4×3.2")
+4. `_create_confidence_distribution()` - Histogram with mean line (5.5×3")
+
+All charts feature:
+- 120 DPI resolution for print quality
+- White edge borders for separation
+- Bold, readable font sizes
+- Proper color contrast
+- Matplotlib figure cleanup with buffer management
+
+### 🔧 Technical Implementation
+
+**PDF Generation:**
+- ReportLab for professional document formatting
+- Matplotlib for chart generation and image embedding
+- Async processing for responsive frontend
+- BytesIO buffer management for proper image handling
+- Figure cleanup (plt.close()) to prevent memory leaks
+
+**Data Processing:**
+- Extracts BERT analysis results (skill partitions, clusters, confidence)
+- Parses AI enrichment data (interview focus, normalizations, triage)
+- Calculates percentages and metrics dynamically
+- Handles missing/null data gracefully with fallbacks
+
+**Emoji Integration:**
+- 📊 📈 ✅ ⚠️ 🎯 🤖 🔗 💪 🏆 🎤 🔄 🟢 🟡 🟠 🔴 
+- Strategic placement for visual hierarchy and accessibility
+- Unicode-safe emoji rendering in PDF
+
+**Response Format:**
+- Streamed binary PDF attachment
+- Dynamic filename: `Resume_Analysis_Report_{DOMAIN}_{DATE}.pdf`
+- Content-Type: application/pdf
+- Proper HTTP headers for download
+
+### 🎯 Scoring & Recommendations
+
+**Alignment Thresholds:**
+| Score | Recommendation | Emoji | Interpretation |
+|-------|----------------|-------|-----------------|
+| ≥75% | Strong Yes | 🟢 | Excellent fit, ready for immediate progression |
+| 60-75% | Yes | 🟡 | Good fit with manageable gaps |
+| 45-60% | Consider | 🟠 | Fair fit, requires training investment |
+| <45% | Pass | 🔴 | Poor fit, substantial gaps identified |
+
+**Formula:**
+```
+Score = (Exact Matches × 1.0 + Strong Semantic × 0.6 + Moderate Semantic × 0.4) / Total JD Skills × 100
+```
 
 ### The Decision Tiers
 Based on the BERT Cosine Similarity outputs, it categorizes candidates' capabilities into four strict UI tiers:

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { X, Code, Users, Briefcase, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
-const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
-    if (!isOpen) return null;
+const SkillsModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => {
+    if (!isEmbedded && !isOpen) return null;
 
     const resumeSkills = data.resume_skills || { technical_skills: [], soft_skills: [], categorized_skills: {} };
     const jdSkills = data.jd_skills || { technical_skills: [], soft_skills: [], categorized_skills: {} };
@@ -21,10 +21,10 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
         const resumeInCategory = resumeSkills.categorized_skills?.[category] || [];
 
         return (
-            <div className="comparison-card fade-in">
-                <div className="card-header-refined">
-                    <div className="card-title-refined">
-                        <Code size={20} color="#4f46e5" />
+            <div className="comparison-card fade-in" style={{ padding: '0.8rem' }}>
+                <div className="card-header-refined" style={{ marginBottom: '0.6rem' }}>
+                    <div className="card-title-refined" style={{ fontSize: '0.85rem' }}>
+                        <Code size={16} color="#4f46e5" />
                         {category}
                     </div>
                     <div className="stats-badges-refined">
@@ -40,11 +40,11 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                 <div className="comparison-columns-refined">
                     {/* Column 1: JD Requirements */}
                     <div>
-                        <div className="skill-col-header-refined required-header">
-                            <Briefcase size={14} />
+                        <div className="skill-col-header-refined required-header" style={{ fontSize: '0.7rem' }}>
+                            <Briefcase size={12} />
                             Required in JD
                         </div>
-                        <div className="skills-list">
+                        <div className="skills-list" style={{ maxHeight: '160px', overflowY: 'auto', paddingRight: '4px' }}>
                             {jdItems.map((skill, idx) => {
                                 const isMatched = resumeFlat.includes(normalize(skill));
                                 const skillName = typeof skill === 'object' ? skill.skill : skill;
@@ -63,11 +63,11 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
 
                     {/* Column 2: Resume Content */}
                     <div>
-                        <div className="skill-col-header-refined found-header">
-                            <Sparkles size={14} />
+                        <div className="skill-col-header-refined found-header" style={{ fontSize: '0.7rem' }}>
+                            <Sparkles size={12} />
                             Found in Your Resume
                         </div>
-                        <div className="skills-list">
+                        <div className="skills-list" style={{ maxHeight: '160px', overflowY: 'auto', paddingRight: '4px' }}>
                             {resumeInCategory.length > 0 ? (
                                 resumeInCategory.map((skill, idx) => {
                                     const isRelevant = jdItems.map(normalize).includes(normalize(skill));
@@ -92,40 +92,25 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
         );
     };
 
-    const modalContent = (
-        <div className="modal-overlay">
-            <div className={`modal-content modal-content-full ${isClosing ? 'slide-down' : ''}`}>
-
-                {/* Header */}
-                <div className="modal-header skills-modal-header" style={{ padding: '1.5rem 3rem' }}>
-                    <div style={{ display: 'flex', gap: '5rem', alignItems: 'center' }}>
-                        <div>
-                            <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800', letterSpacing: '-0.02em' }}>
-                                Skill Matching Breakdown
-                            </h2>
-                            <p style={{ margin: '4px 0 0', fontSize: '0.95rem', opacity: 0.9, fontWeight: '500' }}>
-                                Side-by-side comparison of technical requirements and your qualifications
-                            </p>
-                        </div>
-                        <div style={{ display: 'flex', gap: '4rem' }}>
-                            <div>
-                                <span style={{ fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', opacity: 0.7, letterSpacing: '0.1em' }}>Target Job</span>
-                                <p style={{ margin: '2px 0 0', fontWeight: '600', fontSize: '1.1rem' }}>{data.jd_filename || "Manual Input"}</p>
-                            </div>
-                            <div>
-                                <span style={{ fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', opacity: 0.7, letterSpacing: '0.1em' }}>Your Resume</span>
-                                <p style={{ margin: '2px 0 0', fontWeight: '600', fontSize: '1.1rem' }}>{data.resume_filename || "Uploaded File"}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <button className="modal-close-btn" onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', width: '48px', height: '48px' }}>
-                        <X size={28} />
-                    </button>
-                </div>
+    const panelContent = (
+        <div
+            className={isEmbedded ? '' : `modal-content modal-content-full ${isClosing ? 'slide-down' : ''}`}
+            style={{
+                height: isEmbedded ? 'auto' : undefined,
+                position: isEmbedded ? 'relative' : undefined,
+                top: isEmbedded ? 'auto' : undefined,
+                left: isEmbedded ? 'auto' : undefined,
+                width: isEmbedded ? '100%' : undefined,
+                maxWidth: isEmbedded ? '100%' : undefined,
+                maxHeight: isEmbedded ? 'none' : undefined,
+                borderRadius: isEmbedded ? '14px' : undefined,
+                overflow: isEmbedded ? 'hidden' : undefined,
+            }}
+        >
 
                 {/* Content Area */}
-                <div style={{ flex: 1, padding: '3rem', overflowY: 'auto', background: '#f1f5f9' }}>
-                    <div className="comparison-grid" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                <div style={{ flex: 1, padding: '1rem 1.2rem', overflowY: isEmbedded ? 'visible' : 'auto', background: 'linear-gradient(135deg, #f0f9ff 0%, #eff6ff 100%)', maxHeight: isEmbedded ? 'none' : undefined }}>
+                    <div className="comparison-grid" style={{ maxWidth: '100%', margin: '0 auto' }}>
 
                         {/* Technical Categories from JD */}
                         {Object.entries(jdSkills.categorized_skills || {}).map(([category, skills]) => (
@@ -133,17 +118,17 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                         ))}
 
                         {/* Soft Skills Section (Special Card) */}
-                        <div className="comparison-card fade-in" style={{ borderLeft: '6px solid #10b981' }}>
-                            <div className="card-header-refined">
-                                <div className="card-title-refined" style={{ color: '#059669' }}>
-                                    <Users size={20} />
+                        <div className="comparison-card fade-in" style={{ borderLeft: '6px solid #10b981', padding: '0.5rem 0.6rem' }}>
+                            <div className="card-header-refined" style={{ marginBottom: '0.4rem' }}>
+                                <div className="card-title-refined" style={{ color: '#059669', fontSize: '0.75rem' }}>
+                                    <Users size={16} />
                                     Soft Skills & Competencies
                                 </div>
                             </div>
                             <div className="comparison-columns-refined">
                                 <div>
                                     <div className="skill-col-header-refined" style={{ color: '#059669' }}>Required in JD</div>
-                                    <div className="skills-list">
+                                    <div className="skills-list" style={{ maxHeight: '120px', overflowY: 'auto', paddingRight: '4px' }}>
                                         {(jdSkills.soft_skills || []).map((skill, idx) => (
                                             <span key={idx} className="skill-tag soft-tag">{typeof skill === 'object' ? skill.skill : skill}</span>
                                         ))}
@@ -151,7 +136,7 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                                 </div>
                                 <div>
                                     <div className="skill-col-header-refined" style={{ color: '#059669' }}>Found in Resume</div>
-                                    <div className="skills-list">
+                                    <div className="skills-list" style={{ maxHeight: '120px', overflowY: 'auto', paddingRight: '4px' }}>
                                         {(resumeSkills.soft_skills || []).map((skill, idx) => (
                                             <span key={idx} className="skill-tag soft-tag" style={{ background: '#dcfce7', borderColor: '#10b981', color: '#15803d' }}>
                                                 <CheckCircle2 size={14} style={{ marginRight: '6px' }} />
@@ -165,10 +150,10 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
 
                         {/* Uncategorized Hardware/Other Skills from Resume */}
                         {Object.entries(resumeSkills.categorized_skills || {}).some(([cat]) => !jdSkills.categorized_skills?.[cat]) && (
-                            <div className="comparison-card fade-in" style={{ borderLeft: '6px solid #64748b' }}>
-                                <div className="card-header-refined">
-                                    <div className="card-title-refined" style={{ color: '#475569' }}>
-                                        <AlertCircle size={20} />
+                            <div className="comparison-card fade-in" style={{ borderLeft: '6px solid #64748b', padding: '0.5rem 0.6rem' }}>
+                                <div className="card-header-refined" style={{ marginBottom: '0.4rem' }}>
+                                    <div className="card-title-refined" style={{ color: '#475569', fontSize: '0.75rem' }}>
+                                        <AlertCircle size={16} />
                                         Additional Capabilities (Not explicitly in JD)
                                     </div>
                                 </div>
@@ -178,7 +163,7 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                                         .map(([cat, skills]) => (
                                             <div key={cat} style={{ marginBottom: '1rem', width: '100%' }}>
                                                 <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{cat}</div>
-                                                <div className="skills-list">
+                                                <div className="skills-list" style={{ maxHeight: '120px', overflowY: 'auto', paddingRight: '4px' }}>
                                                     {skills.map((skill, idx) => (
                                                         <span key={idx} className="skill-tag tech-tag" style={{ opacity: 0.8 }}>{typeof skill === 'object' ? skill.skill : skill}</span>
                                                     ))}
@@ -193,6 +178,15 @@ const SkillsModal = ({ isOpen, onClose, isClosing, data }) => {
                     </div>
                 </div>
             </div>
+    );
+
+    if (isEmbedded) {
+        return panelContent;
+    }
+
+    const modalContent = (
+        <div className="modal-overlay">
+            {panelContent}
         </div>
     );
 

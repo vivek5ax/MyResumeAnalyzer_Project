@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import { CheckCircle, X, FileText, FileSearch, BrainCircuit, Sparkles, BarChart3 } from 'lucide-react';
-import SkillsModal from './SkillsModal';
-import BertModal from './BertModal';
+import { CheckCircle, X, FileText, FileSearch, BrainCircuit, BarChart3 } from 'lucide-react';
+import SkillMatchingModal from './SkillMatchingModal';
 import VisualizationModal from './VisualizationModal';
 
 const Preview = ({ data, hideActions = false }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
-    const [isBertModalOpen, setIsBertModalOpen] = useState(false);
+    const [isSkillMatchingModalOpen, setIsSkillMatchingModalOpen] = useState(false);
     const [isVizModalOpen, setIsVizModalOpen] = useState(false);
 
     const [isClosing, setIsClosing] = useState(false);
-    const [isSkillsClosing, setIsSkillsClosing] = useState(false);
-    const [isBertClosing, setIsBertClosing] = useState(false);
+    const [isSkillMatchingClosing, setIsSkillMatchingClosing] = useState(false);
     const [isVizClosing, setIsVizClosing] = useState(false);
 
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -69,21 +66,12 @@ const Preview = ({ data, hideActions = false }) => {
         }, 500);
     };
 
-    const openSkillsModal = () => setIsSkillsModalOpen(true);
-    const closeSkillsModal = () => {
-        setIsSkillsClosing(true);
+    const openSkillMatchingModal = () => setIsSkillMatchingModalOpen(true);
+    const closeSkillMatchingModal = () => {
+        setIsSkillMatchingClosing(true);
         setTimeout(() => {
-            setIsSkillsModalOpen(false);
-            setIsSkillsClosing(false);
-        }, 500);
-    };
-
-    const openBertModal = () => setIsBertModalOpen(true);
-    const closeBertModal = () => {
-        setIsBertClosing(true);
-        setTimeout(() => {
-            setIsBertModalOpen(false);
-            setIsBertClosing(false);
+            setIsSkillMatchingModalOpen(false);
+            setIsSkillMatchingClosing(false);
         }, 500);
     };
 
@@ -203,21 +191,7 @@ const Preview = ({ data, hideActions = false }) => {
                         <BarChart3 size={20} />
                         Visual Analytics
                     </button>
-                    <button className="btn" onClick={openBertModal} style={{
-                        padding: '0.9rem',
-                        fontSize: '0.92rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.75rem',
-                        background: '#5d66e8',
-                        boxShadow: '0 8px 14px -10px rgba(90, 99, 232, 0.48)',
-                        border: 'none'
-                    }}>
-                        <Sparkles size={20} />
-                        Semantic Analysis
-                    </button>
-                    <button className="btn" onClick={openSkillsModal} style={{
+                    <button className="btn" onClick={openSkillMatchingModal} style={{
                         padding: '0.9rem',
                         fontSize: '0.92rem',
                         display: 'flex',
@@ -229,7 +203,7 @@ const Preview = ({ data, hideActions = false }) => {
                         border: 'none'
                     }}>
                         <BrainCircuit size={20} />
-                        Skills Mapping
+                        Skill Matching
                     </button>
                     <button className="btn" onClick={openModal} style={{
                         padding: '0.9rem',
@@ -250,8 +224,7 @@ const Preview = ({ data, hideActions = false }) => {
             </div>
 
             {isModalOpen && ReactDOM.createPortal(modalContent, document.body)}
-            <SkillsModal isOpen={isSkillsModalOpen} onClose={closeSkillsModal} isClosing={isSkillsClosing} data={data} />
-            <BertModal isOpen={isBertModalOpen} onClose={closeBertModal} isClosing={isBertClosing} data={data} />
+            <SkillMatchingModal isOpen={isSkillMatchingModalOpen} onClose={closeSkillMatchingModal} isClosing={isSkillMatchingClosing} data={data} />
             <VisualizationModal isOpen={isVizModalOpen} onClose={closeVizModal} isClosing={isVizClosing} data={data} />
         </div>
     );

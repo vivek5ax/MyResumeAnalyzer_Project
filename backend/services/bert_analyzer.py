@@ -5,8 +5,15 @@ import torch
 import os
 from .taxonomy_loader import load_taxonomy, BASE_PATH
 
-# Load spaCy strictly for semantic sentence splitting boundaries
-nlp = spacy.load("en_core_web_sm", disable=["ner", "tagger", "lemmatizer", "textcat"]) # Parser needed for sentence segmenting
+# Load spaCy for sentence boundaries. Fall back to a local blank pipeline when
+# the external model is unavailable (e.g., restricted network environments).
+try:
+    nlp = spacy.load("en_core_web_sm", disable=["ner", "tagger", "lemmatizer", "textcat"])
+except Exception:
+    nlp = spacy.blank("en")
+    if "sentencizer" not in nlp.pipe_names:
+        nlp.add_pipe("sentencizer")
+    print("⚠️ spaCy model 'en_core_web_sm' not found. Using fallback sentencizer pipeline.")
 
 # Hardware Acceleration Setup
 device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")

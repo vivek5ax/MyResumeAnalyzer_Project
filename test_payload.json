@@ -1,0 +1,13 @@
+{
+  "domain": "Software",
+  "resume_skills": ["Python", "FastAPI", "React", "JavaScript"],
+  "jd_skills": ["Python", "FastAPI", "React", "JavaScript", "Docker"],
+  "match_score": 80,
+  "missing_skills": ["Docker"],
+  "semantic_score": 85,
+  "analysis": {
+    "ats_score": 80,
+    "skills_coverage": 78,
+    "experience_match": 82
+  }
+}

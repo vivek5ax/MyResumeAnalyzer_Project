@@ -7,12 +7,21 @@ import {
     Radar, RadarChart, PolarGrid, PolarAngleAxis
 } from 'recharts';
 
-const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
-    if (!isOpen) return null;
+const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => {
+    if (!isEmbedded && !isOpen) return null;
 
     const skillsMapRef = React.useRef(null);
     const visualScrollRef = React.useRef(null);
     const [skillsMapVisible, setSkillsMapVisible] = React.useState(false);
+    const [activeViz, setActiveViz] = React.useState('progression');
+
+    const vizTabs = [
+        { id: 'progression', label: 'Skill Match Progression' },
+        { id: 'heatmap', label: 'Category Risk Heatmap' },
+        { id: 'semantic', label: 'Semantic Convergence' },
+        { id: 'domain', label: 'Domain Skill Categories' },
+        { id: 'talents', label: 'Unsolicited Talents' },
+    ];
 
     const bertResults = data.bert_results || {};
     const summary = bertResults.summary || { overall_alignment_score: 0, exact_match_count: 0, semantic_match_count: 0, missing_skills_count: 0 };
@@ -101,8 +110,64 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
         };
     }).sort((a, b) => b.weightedRisk - a.weightedRisk);
 
-    const maxRiskValue = Math.max(1, ...categoryHeatmapRows.map((row) => row.weightedRisk || 0));
-    const maxMissingValue = Math.max(1, ...categoryHeatmapRows.map((row) => row.missingCount || 0));
+    // Elegant Color Gradient Functions for Professional Heatmap
+    const getColorGradient = (value, type) => {
+        // value is 0-100 (or 0-max normalized to 0-100)
+        // type: 'coverage' (teal), 'missing' (coral), 'risk' (plum)
+        const norm = Math.max(0, Math.min(1, value / 100));
+        
+        if (type === 'coverage') {
+            // Coverage: Cool gradient from light teal to deep teal
+            // Light teal (#d1fae5) → Vibrant teal (#14b8a6) → Deep teal (#0d9488)
+            const colors = [
+                { pos: 0.0, r: 209, g: 250, b: 229 },  // Light mint
+                { pos: 0.3, r: 45, g: 212, b: 191 },   // Vibrant teal
+                { pos: 0.6, r: 20, g: 184, b: 166 },   // Rich teal
+                { pos: 1.0, r: 13, g: 148, b: 136 }    // Deep teal
+            ];
+            const segment = colors.find((c, i) => norm <= (colors[i + 1]?.pos || 1));
+            const nextSegment = colors.find((c, i) => norm > c.pos && (i === colors.length - 1 || norm <= colors[i + 1]?.pos));
+            if (!nextSegment) return `rgb(${colors[colors.length - 1].r}, ${colors[colors.length - 1].g}, ${colors[colors.length - 1].b})`;
+            return `rgb(${Math.round(segment.r + (nextSegment.r - segment.r) * norm)}, ${Math.round(segment.g + (nextSegment.g - segment.g) * norm)}, ${Math.round(segment.b + (nextSegment.b - segment.b) * norm)})`;
+        } else if (type === 'missing') {
+            // Missing: Coral to warm gradient (light amber to deep orange)
+            // Light cream (#fef3c7) → Soft amber (#fcd34d) → Deep orange (#d97706)
+            const colors = [
+                { pos: 0.0, r: 254, g: 243, b: 199 },  // Cream
+                { pos: 0.3, r: 252, g: 211, b: 77 },   // Soft amber
+                { pos: 0.6, r: 245, g: 158, b: 11 },   // Rich amber
+                { pos: 1.0, r: 217, g: 119, b: 6 }     // Deep orange
+            ];
+            const idx = Math.floor(norm * (colors.length - 1));
+            const segment = colors[idx];
+            const nextSeg = colors[Math.min(idx + 1, colors.length - 1)];
+            const localNorm = norm * (colors.length - 1) - idx;
+            return `rgb(${Math.round(segment.r + (nextSeg.r - segment.r) * localNorm)}, ${Math.round(segment.g + (nextSeg.g - segment.g) * localNorm)}, ${Math.round(segment.b + (nextSeg.b - segment.b) * localNorm)})`;
+        } else {
+            // Risk: Elegant rose to plum gradient
+            // Light rose (#fce7f3) → Soft coral (#f472b6) → Deep plum (#be185d)
+            const colors = [
+                { pos: 0.0, r: 252, g: 231, b: 243 },  // Light rose
+                { pos: 0.3, r: 244, g: 114, b: 182 },  // Soft coral
+                { pos: 0.6, r: 219, g: 39, b: 119 },   // Rich rose
+                { pos: 1.0, r: 190, g: 24, b: 93 }     // Deep plum
+            ];
+            const idx = Math.floor(norm * (colors.length - 1));
+            const segment = colors[idx];
+            const nextSeg = colors[Math.min(idx + 1, colors.length - 1)];
+            const localNorm = norm * (colors.length - 1) - idx;
+            return `rgb(${Math.round(segment.r + (nextSeg.r - segment.r) * localNorm)}, ${Math.round(segment.g + (nextSeg.g - segment.g) * localNorm)}, ${Math.round(segment.b + (nextSeg.b - segment.b) * localNorm)})`;
+        }
+    };
+
+    // Smart text color based on background brightness
+    const getTextColorForBackground = (bgColor, lightText = '#f8fafc', darkText = '#1f2937') => {
+        const rgbMatch = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (!rgbMatch) return lightText;
+        const [, r, g, b] = rgbMatch;
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.5 ? darkText : lightText;
+    };
 
     const normalizeSkill = (skill) => {
         if (typeof skill === 'object' && skill !== null) {
@@ -230,17 +295,18 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
     }, [isOpen]);
 
     const funnelData = [
-        { stage: 'JD Skills', value: summary.total_jd_skills, fill: '#6366f1' },
-        { stage: 'Exact', value: summary.exact_match_count, fill: '#10b981' },
-        { stage: 'Semantic', value: summary.semantic_match_count, fill: '#3b82f6' },
-        { stage: 'Missing', value: summary.missing_skills_count, fill: '#ef4444' },
+        { stage: 'Total Required', value: summary.total_jd_skills, fill: '#64748b', desc: 'Skills in Job Description' },
+        { stage: 'Exact Matches', value: summary.exact_match_count, fill: '#10b981', desc: 'Complete matches found' },
+        { stage: 'Semantic Matches', value: summary.semantic_match_count, fill: '#3b82f6', desc: 'Skills semantically related' },
+        { stage: 'Coverage Total', value: summary.exact_match_count + summary.semantic_match_count, fill: '#8b5cf6', desc: 'All matches combined' },
     ];
 
-    // 5. Radar Chart (Profile)
+    // 5. Radar Chart (Profile) - Dual Layer with JD and Resume
     const radarData = Object.keys(resumeClusters).map(cat => ({
         subject: cat,
         A: resumeClusters[cat].length,
-        fullMark: Math.max(10, resumeClusters[cat].length + 2)
+        B: jdClusters[cat] ? jdClusters[cat].length : 0,
+        fullMark: Math.max(10, Math.max(resumeClusters[cat].length, (jdClusters[cat] ? jdClusters[cat].length : 0)) + 2)
     }));
 
     // 6. Extra Skills Badges
@@ -283,68 +349,83 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
         return null;
     };
 
-    const modalContent = (
-        <div className="modal-overlay" style={{ zIndex: 10000, background: 'rgba(0,0,0,0.85)' }}>
-            <div className={`modal-content modal-content-full ${isClosing ? 'slide-down' : ''}`} style={{ background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)', maxWidth: '1400px', margin: '2rem auto' }}>
+    const panelContent = (
+            <div
+                className={isEmbedded ? '' : `modal-content modal-content-full ${isClosing ? 'slide-down' : ''}`}
+                style={{
+                    background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)',
+                    maxWidth: isEmbedded ? '100%' : '1400px',
+                    margin: isEmbedded ? '0' : '2rem auto',
+                    borderRadius: isEmbedded ? '16px' : undefined,
+                    border: isEmbedded ? '1px solid #243041' : undefined,
+                    overflow: isEmbedded ? 'hidden' : undefined,
+                    position: isEmbedded ? 'relative' : undefined,
+                    top: isEmbedded ? 'auto' : undefined,
+                    left: isEmbedded ? 'auto' : undefined,
+                    width: isEmbedded ? '100%' : undefined,
+                    maxHeight: isEmbedded ? 'none' : undefined,
+                }}
+            >
 
-                {/* Header */}
-                <div className="modal-header" style={{
-                    padding: '1.5rem 3rem',
-                    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                    color: 'white',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 10
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                        <div style={{ background: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '12px' }}>
-                            <BarChart3 size={32} color="#38bdf8" />
+                {!isEmbedded && (
+                    <div className="modal-header" style={{
+                        padding: '1.5rem 3rem',
+                        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                        color: 'white',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 10
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '12px' }}>
+                                <BarChart3 size={32} color="#38bdf8" />
+                            </div>
+                            <div>
+                                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>Visual Analytics Dashboard</h2>
+                                <p style={{ margin: '4px 0 0', opacity: 0.8, fontSize: '0.9rem' }}>Comprehensive breakdown of candidate alignment</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>Visual Analytics Dashboard</h2>
-                            <p style={{ margin: '4px 0 0', opacity: 0.8, fontSize: '0.9rem' }}>Comprehensive breakdown of candidate alignment</p>
-                        </div>
+
+                        <button className="modal-close-btn" onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', cursor: 'pointer' }}>
+                            <X size={24} />
+                        </button>
                     </div>
-
-                    <button className="modal-close-btn" onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', cursor: 'pointer' }}>
-                        <X size={24} />
-                    </button>
-                </div>
+                )}
 
                 {/* Dashboard Grid */}
-                <div ref={visualScrollRef} className="visual-analytics-scroll" style={{ padding: '2rem 3rem', display: 'flex', flexDirection: 'column', gap: '2rem', flex: 1, background: 'transparent' }}>
+                <div ref={visualScrollRef} className="visual-analytics-scroll" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', flex: 1, background: 'transparent' }}>
 
                     {/* Section 1: Executive Overview (Moved to top) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
 
                         {/* 1. Alignment Gauge */}
-                        <div className="content-card" style={{ background: '#1e293b', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', borderTop: `4px solid ${gaugeColor}` }}>
-                            <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                                <Target size={20} color={gaugeColor} />
+                        <div className="content-card" style={{ background: '#1e293b', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.4rem', borderTop: `4px solid ${gaugeColor}` }}>
+                            <h3 style={{ margin: '0 0 0.7rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '1.05rem' }}>
+                                <Target size={18} color={gaugeColor} />
                                 Overall Alignment Score
                             </h3>
-                            <div style={{ height: 180, width: '100%', position: 'relative', marginTop: '1rem' }}>
+                            <div style={{ height: 150, width: '100%', position: 'relative', marginTop: '0.55rem' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie data={gaugeData} cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius={100} outerRadius={140} dataKey="value" stroke="none" />
                                     </PieChart>
                                 </ResponsiveContainer>
-                                <div style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '3.5rem', fontWeight: '900', color: gaugeColor, textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{score}%</span>
+                                <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
+                                    <span style={{ fontSize: '2.6rem', fontWeight: '900', color: gaugeColor, textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{score}%</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* 2. Match Distribution */}
-                        <div className="content-card" style={{ background: '#1e293b', padding: '2rem', borderTop: `4px solid ${COLORS.purple}` }}>
-                            <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                                <PieChartIcon size={20} color={COLORS.purple} />
+                        <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', borderTop: `4px solid ${COLORS.purple}` }}>
+                            <h3 style={{ margin: '0 0 0.7rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '1.05rem' }}>
+                                <PieChartIcon size={18} color={COLORS.purple} />
                                 Match Distribution
                             </h3>
-                            <div style={{ height: 280, width: '100%', display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ height: 230, width: '100%', display: 'flex', justifyContent: 'center' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
@@ -374,8 +455,60 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
 
                     </div>
 
+                    {/* Section 2: Deep Category Analysis */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+                        {/* 3. Category Comparison Bar Chart */}
+                        <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', borderTop: `4px solid ${COLORS.info}` }}>
+                            <h3 style={{ margin: '0 0 0.9rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '1.05rem' }}>
+                                <Layers size={18} color={COLORS.info} />
+                                Discovered Categories (JD vs Resume)
+                            </h3>
+                            <div style={{ height: 340, width: '100%' }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={categoryData} margin={{ top: 10, right: 16, left: 0, bottom: 60 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
+                                        <XAxis dataKey="category" angle={-40} textAnchor="end" height={78} interval={0} tick={{ fontSize: 11, fill: 'white', fontWeight: 600 }} dx={-3} dy={8} />
+                                        <YAxis tick={{ fontSize: 11, fill: 'white', fontWeight: 600 }} allowDecimals={false} />
+                                        <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={<CustomTooltip />} />
+                                        <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: '20px' }} />
+                                        <Bar dataKey="jd" name="Job Requirement" fill={COLORS.success} radius={[4, 4, 0, 0]} barSize={32} />
+                                        <Bar dataKey="resume" name="Resume Possesses" fill={COLORS.info} radius={[4, 4, 0, 0]} barSize={32} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* 5. Resume Profile Radar */}
+                        <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', display: 'flex', flexDirection: 'column', borderTop: `4px solid ${COLORS.success}` }}>
+                            <h3 style={{ margin: '0 0 0 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '1.05rem' }}>
+                                <Activity size={18} color={COLORS.success} />
+                                Resume Expertise Profile
+                            </h3>
+                            <div style={{ marginTop: '0.8rem', minHeight: 320, width: '100%' }}>
+                                {radarData.length >= 3 ? (
+                                    <ResponsiveContainer width="100%" height={320}>
+                                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                                            <PolarGrid gridType="circle" stroke="#334155" />
+                                            <PolarAngleAxis dataKey="subject" tick={{ fill: 'white', fontSize: 13, fontWeight: 600 }} />
+                                            <Radar name="Resume Expertise" dataKey="A" stroke={COLORS.success} strokeWidth={2.5} fill={COLORS.success} fillOpacity={0.35} />
+                                            <Radar name="Job Requirements" dataKey="B" stroke={COLORS.info} strokeWidth={2.5} fill={COLORS.info} fillOpacity={0.25} />
+                                            <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: '10px' }} />
+                                            <Tooltip content={<CustomTooltip />} />
+                                        </RadarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>
+                                        Not enough distinct categories mapped for radar visualization (Need ≥ 3).
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                    </div>
+
                     {/* Phase 1: Executive Intelligence Strip */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))', gap: '0.75rem' }}>
                         <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #6366f1', padding: '1rem 1.15rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{ color: '#93c5fd', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>📈</span><span>Weighted Coverage</span></span>
@@ -409,20 +542,59 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                         </div>
                     </div>
 
-                    {/* Phase 1: Match Progression */}
-                    <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', borderTop: `4px solid ${COLORS.info}` }}>
-                        <h3 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                            <Target size={20} color={COLORS.info} />
-                            Match Funnel View
+                    <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #4f46e5', padding: '0.75rem 1rem' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            {vizTabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveViz(tab.id)}
+                                    style={{
+                                        border: activeViz === tab.id ? '1px solid #6366f1' : '1px solid #334155',
+                                        background: activeViz === tab.id ? '#4f46e5' : '#0f172a',
+                                        color: activeViz === tab.id ? '#ffffff' : '#cbd5e1',
+                                        borderRadius: '999px',
+                                        padding: '0.36rem 0.75rem',
+                                        fontSize: '0.74rem',
+                                        fontWeight: 700,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Phase 1: Skill Match Breakdown */}
+                    {activeViz === 'progression' && (
+                    <div className="content-card" style={{ background: '#1e293b', padding: '1.2rem', borderTop: `4px solid ${COLORS.info}` }}>
+                        <h3 style={{ margin: '0 0 0.7rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '1rem', fontWeight: 900 }}>
+                            <Target size={18} color={COLORS.info} />
+                            Skill Match Progression
                         </h3>
-                        <div style={{ height: 290, width: '100%' }}>
+                        <p style={{ margin: '0 0 1.5rem 0', color: '#94a3b8', fontSize: '0.9rem' }}>Visual breakdown of how candidate skills align with job requirements</p>
+                        <div style={{ height: 250, width: '100%' }}>
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={funnelData} margin={{ top: 8, right: 20, left: 0, bottom: 30 }}>
+                                <BarChart data={funnelData} margin={{ top: 15, right: 30, left: 0, bottom: 40 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
-                                    <XAxis dataKey="stage" tick={{ fill: '#f8fafc', fontSize: 12, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                                    <YAxis allowDecimals={false} tick={{ fill: '#e2e8f0', fontSize: 12 }} axisLine={false} tickLine={false} />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="value" name="Skills" radius={[8, 8, 0, 0]}>
+                                    <XAxis dataKey="stage" tick={{ fill: '#f8fafc', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} angle={-15} textAnchor="end" height={80} />
+                                    <YAxis allowDecimals={false} tick={{ fill: '#e2e8f0', fontSize: 13, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                                    <Tooltip 
+                                        cursor={false}
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div style={{ background: '#1e293b', color: 'white', padding: '12px 16px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', border: '1px solid #334155' }}>
+                                                        <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '0.95rem' }}>{payload[0].payload.stage}</p>
+                                                        <p style={{ margin: '0 0 4px 0', color: '#94a3b8', fontSize: '0.85rem' }}>{payload[0].payload.desc}</p>
+                                                        <p style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem', color: payload[0].fill }}>{payload[0].value} skills</p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Bar dataKey="value" name="Skills Count" radius={[10, 10, 0, 0]} barSize={60}>
                                         {funnelData.map((entry, idx) => (
                                             <Cell key={`fn-${entry.stage}-${idx}`} fill={entry.fill} />
                                         ))}
@@ -431,97 +603,122 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                             </ResponsiveContainer>
                         </div>
                     </div>
+                    )}
 
-                    {/* Phase 1: Category Risk Heatmap */}
-                    <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', borderTop: `4px solid ${COLORS.warning}` }}>
-                        <h3 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                            <Layers size={20} color={COLORS.warning} />
+                    {/* Phase 1: Category Risk Heatmap - Professional Gradient Design */}
+                    {activeViz === 'heatmap' && (
+                    <div className="content-card" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #1a1f35 100%)', padding: '1.2rem', borderTop: `4px solid ${COLORS.warning}`, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                        <h3 style={{ margin: '0 0 0.8rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#f1f5f9', fontSize: '1rem', letterSpacing: '0.2px' }}>
+                            <Layers size={18} color={COLORS.warning} />
                             Category Risk Heatmap
                         </h3>
-                        <div style={{ border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(170px, 1.8fr) repeat(3, minmax(110px, 1fr))', background: '#0b1222', borderBottom: '1px solid #334155' }}>
-                                <div style={{ padding: '0.55rem 0.7rem', color: '#93a5c9', fontSize: '0.73rem', fontWeight: 800, textTransform: 'uppercase' }}>Category</div>
-                                <div style={{ padding: '0.55rem 0.6rem', color: '#93a5c9', fontSize: '0.73rem', fontWeight: 800, textTransform: 'uppercase' }}>Coverage %</div>
-                                <div style={{ padding: '0.55rem 0.6rem', color: '#93a5c9', fontSize: '0.73rem', fontWeight: 800, textTransform: 'uppercase' }}>Missing Count</div>
-                                <div style={{ padding: '0.55rem 0.6rem', color: '#93a5c9', fontSize: '0.73rem', fontWeight: 800, textTransform: 'uppercase' }}>Risk Weight</div>
+                        <div style={{ border: '1px solid #475569', borderRadius: '14px', overflow: 'hidden', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)' }}>
+                            {/* Header Row */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 2fr) repeat(3, minmax(120px, 1fr))', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f35 100%)', borderBottom: '2px solid #475569' }}>
+                                <div style={{ padding: '0.65rem 0.9rem', color: '#cbd5e1', fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Category</div>
+                                <div style={{ padding: '0.65rem 0.8rem', color: '#14b8a6', fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Coverage</div>
+                                <div style={{ padding: '0.65rem 0.8rem', color: '#f59e0b', fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Missing</div>
+                                <div style={{ padding: '0.65rem 0.8rem', color: '#ec4899', fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Risk</div>
                             </div>
 
+                            {/* Data Rows */}
                             {categoryHeatmapRows.map((row, idx) => {
-                                const coverageAlpha = 0.12 + (row.coveragePct / 100) * 0.62;
-                                const missingAlpha = 0.12 + ((row.missingCount || 0) / maxMissingValue) * 0.62;
-                                const riskAlpha = 0.12 + ((row.weightedRisk || 0) / maxRiskValue) * 0.62;
+                                // Normalize values to 0-100 scale
+                                const coverageValue = Math.max(0, Math.min(100, row.coveragePct || 0));
+                                const maxMissing = Math.max(1, ...categoryHeatmapRows.map(r => r.missingCount || 0));
+                                const maxRisk = Math.max(1, ...categoryHeatmapRows.map(r => r.weightedRisk || 0));
+                                const missingNorm = ((row.missingCount || 0) / maxMissing) * 100;
+                                const riskNorm = ((row.weightedRisk || 0) / maxRisk) * 100;
+
+                                const coverageColor = getColorGradient(coverageValue, 'coverage');
+                                const missingColor = getColorGradient(missingNorm, 'missing');
+                                const riskColor = getColorGradient(riskNorm, 'risk');
+
+                                const coverageTextColor = getTextColorForBackground(coverageColor);
+                                const missingTextColor = getTextColorForBackground(missingColor);
+                                const riskTextColor = getTextColorForBackground(riskColor);
 
                                 return (
-                                    <div key={`${row.category}-${idx}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(170px, 1.8fr) repeat(3, minmax(110px, 1fr))', borderBottom: idx === categoryHeatmapRows.length - 1 ? 'none' : '1px solid #334155', background: '#0f172a' }}>
-                                        <div style={{ padding: '0.58rem 0.7rem', color: '#e2e8f0', fontSize: '0.82rem', fontWeight: 700 }}>{row.category}</div>
-                                        <div style={{ padding: '0.58rem 0.6rem', background: `rgba(34,197,94,${coverageAlpha})`, color: '#dcfce7', fontWeight: 800, fontSize: '0.8rem' }}>{row.coveragePct}%</div>
-                                        <div style={{ padding: '0.58rem 0.6rem', background: `rgba(245,158,11,${missingAlpha})`, color: '#fef3c7', fontWeight: 800, fontSize: '0.8rem' }}>{row.missingCount}</div>
-                                        <div style={{ padding: '0.58rem 0.6rem', background: `rgba(239,68,68,${riskAlpha})`, color: '#fee2e2', fontWeight: 800, fontSize: '0.8rem' }}>{row.weightedRisk}</div>
+                                    <div key={`${row.category}-${idx}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 2fr) repeat(3, minmax(120px, 1fr))', borderBottom: idx === categoryHeatmapRows.length - 1 ? 'none' : '1px solid #334155', background: '#0a0f1a', transition: 'background 0.15s ease' }}>
+                                        <div style={{ padding: '0.7rem 0.9rem', color: '#e2e8f0', fontSize: '0.87rem', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{row.category}</div>
+                                        <div 
+                                            style={{ 
+                                                padding: '0.7rem 0.8rem', 
+                                                background: coverageColor,
+                                                color: coverageTextColor,
+                                                fontWeight: 800, 
+                                                fontSize: '0.83rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: '6px',
+                                                margin: '4px',
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                                textShadow: '0 1px 1px rgba(0,0,0,0.1)'
+                                            }}>
+                                            {row.coveragePct}%
+                                        </div>
+                                        <div 
+                                            style={{ 
+                                                padding: '0.7rem 0.8rem', 
+                                                background: missingColor,
+                                                color: missingTextColor,
+                                                fontWeight: 800, 
+                                                fontSize: '0.83rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: '6px',
+                                                margin: '4px',
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                                textShadow: '0 1px 1px rgba(0,0,0,0.1)'
+                                            }}>
+                                            {row.missingCount}
+                                        </div>
+                                        <div 
+                                            style={{ 
+                                                padding: '0.7rem 0.8rem', 
+                                                background: riskColor,
+                                                color: riskTextColor,
+                                                fontWeight: 800, 
+                                                fontSize: '0.83rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: '6px',
+                                                margin: '4px',
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                                textShadow: '0 1px 1px rgba(0,0,0,0.1)'
+                                            }}>
+                                            {row.weightedRisk}
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
 
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.8rem' }}>
-                            <span style={{ color: '#94a3b8', fontSize: '0.74rem', fontWeight: 700 }}>Color intensity indicates magnitude.</span>
-                            <span style={{ color: '#86efac', fontSize: '0.74rem', fontWeight: 700 }}>Green: stronger coverage</span>
-                            <span style={{ color: '#fcd34d', fontSize: '0.74rem', fontWeight: 700 }}>Amber: more missing skills</span>
-                            <span style={{ color: '#fca5a5', fontSize: '0.74rem', fontWeight: 700 }}>Red: higher weighted risk</span>
-                        </div>
-                    </div>
-
-                    {/* Section 2: Deep Category Analysis */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-
-                        {/* 3. Category Comparison Bar Chart */}
-                        <div className="content-card" style={{ background: '#1e293b', padding: '2rem', borderTop: `4px solid ${COLORS.info}` }}>
-                            <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                                <Layers size={20} color={COLORS.info} />
-                                Discovered Categories (JD vs Resume)
-                            </h3>
-                            <div style={{ height: 450, width: '100%' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={categoryData} margin={{ top: 20, right: 30, left: 0, bottom: 80 }}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
-                                        <XAxis dataKey="category" angle={-45} textAnchor="end" height={100} interval={0} tick={{ fontSize: 13, fill: 'white', fontWeight: 600 }} dx={-5} dy={10} />
-                                        <YAxis tick={{ fontSize: 13, fill: 'white', fontWeight: 600 }} allowDecimals={false} />
-                                        <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={<CustomTooltip />} />
-                                        <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: '20px' }} />
-                                        <Bar dataKey="jd" name="Job Requirement" fill={COLORS.success} radius={[4, 4, 0, 0]} barSize={32} />
-                                        <Bar dataKey="resume" name="Resume Possesses" fill={COLORS.info} radius={[4, 4, 0, 0]} barSize={32} />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                        {/* Legend with Gradient Samples */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginTop: '1.2rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                                <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(90deg, #d1fae5, #14b8a6, #0d9488)', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                                <span style={{ color: '#cbd5e1', fontSize: '0.75rem', fontWeight: 600 }}>Coverage: Light Teal → Deep Teal</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                                <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(90deg, #fef3c7, #fcd34d, #d97706)', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                                <span style={{ color: '#cbd5e1', fontSize: '0.75rem', fontWeight: 600 }}>Missing: Light Amber → Deep Orange</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                                <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(90deg, #fce7f3, #f472b6, #be185d)', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                                <span style={{ color: '#cbd5e1', fontSize: '0.75rem', fontWeight: 600 }}>Risk: Light Rose → Deep Plum</span>
                             </div>
                         </div>
-
-                        {/* 5. Resume Profile Radar */}
-                        <div className="content-card" style={{ background: '#1e293b', padding: '2rem', display: 'flex', flexDirection: 'column', borderTop: `4px solid ${COLORS.success}` }}>
-                            <h3 style={{ margin: '0 0 0 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                                <Activity size={20} color={COLORS.success} />
-                                Resume Expertise Profile
-                            </h3>
-                            <div style={{ marginTop: '1rem', minHeight: 450, width: '100%' }}>
-                                {radarData.length >= 3 ? (
-                                    <ResponsiveContainer width="100%" height={450}>
-                                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                                            <PolarGrid gridType="circle" stroke="#334155" />
-                                            <PolarAngleAxis dataKey="subject" tick={{ fill: 'white', fontSize: 13, fontWeight: 600 }} />
-                                            <Radar name="Resume Expertise" dataKey="A" stroke={COLORS.success} strokeWidth={2} fill={COLORS.success} fillOpacity={0.4} />
-                                            <Tooltip content={<CustomTooltip />} />
-                                        </RadarChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>
-                                        Not enough distinct categories mapped for radar visualization (Need ≥ 3).
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
+                        <p style={{ color: '#94a3b8', fontSize: '0.73rem', marginTop: '0.8rem', fontStyle: 'italic' }}>✓ Color gradients represent magnitude: darker shades indicate higher values</p>
                     </div>
+                    )}
 
                     {/* Section 3: Semantic Match Quality (Combined Block) */}
-                    <div className="content-card" style={{ background: '#1e293b', padding: '2.5rem', display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(600px, 2.5fr)', gap: '3rem', borderTop: `5px solid ${COLORS.info}` }}>
+                    {activeViz === 'semantic' && (
+                    <div className="content-card" style={{ background: '#1e293b', padding: '1.35rem', display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: '1.25rem', borderTop: `5px solid ${COLORS.info}` }}>
 
                         <div style={{ gridColumn: '1 / -1' }}>
                             <h3 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '10px', color: 'white' }}>
@@ -534,13 +731,13 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                         {/* 8. Semantic Confidence Distribution */}
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <h4 style={{ margin: '0 0 1.5rem 0', color: '#cbd5e1', fontSize: '1.05rem', fontWeight: '600' }}>Confidence Distribution</h4>
-                            <div style={{ height: 250, width: '100%' }}>
+                            <div style={{ height: 300, width: '100%' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={buckets} margin={{ top: 10, right: 20, left: 0, bottom: 30 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
                                         <XAxis dataKey="range" tick={{ fontSize: 13, fill: 'white', fontWeight: 600 }} axisLine={false} tickLine={false} interval={0} />
                                         <YAxis allowDecimals={false} tick={{ fontSize: 13, fill: 'white', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                                        <Tooltip cursor={{ fill: '#f8fafc' }} content={<CustomTooltip />} />
+                                        <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} content={<CustomTooltip />} />
                                         <Bar dataKey="count" name="Skills" radius={[6, 6, 0, 0]} barSize={40}>
                                             {buckets.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -555,147 +752,245 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <h4 style={{ margin: '0 0 1.5rem 0', color: '#cbd5e1', fontSize: '1.05rem', fontWeight: '600' }}>Detailed Match Ledger</h4>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', width: '100%' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', width: '100%' }}>
 
                                 {/* 90-100% Column */}
                                 <div style={{ display: 'flex', flexDirection: 'column', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' }}>
-                                    <div style={{ background: '#10b98115', padding: '0.75rem', borderBottom: '2px solid #10b981', textAlign: 'center', fontWeight: 'bold', color: '#34d399', fontSize: '0.85rem' }}>90-100% Match</div>
-                                    <div style={{ maxHeight: '260px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ background: '#10b98115', padding: '0.6rem', borderBottom: '2px solid #10b981', textAlign: 'center', fontWeight: 'bold', color: '#34d399', fontSize: '0.85rem' }}>90-100% Match</div>
+                                    <div className="match-ledger-column" style={{ maxHeight: '210px', overflowY: 'auto', padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                                         {allMatches.filter(s => s.score >= 0.9).length > 0 ? allMatches.filter(s => s.score >= 0.9).map((match, i) => (
-                                            <div key={i} style={{ background: '#1e293b', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid #10b981`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontWeight: '600', color: 'white', fontSize: '0.85rem' }}>{match.skill}</span>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#10b981' }}>{(match.score * 100).toFixed(0)}%</span>
+                                            <div key={i} style={{ background: '#1e293b', padding: '0.6rem', borderRadius: '8px', borderLeft: `4px solid #10b981`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontWeight: '600', color: 'white', fontSize: '0.8rem' }}>{match.skill}</span>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#10b981' }}>{(match.score * 100).toFixed(0)}%</span>
                                             </div>
-                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', fontStyle: 'italic', margin: '1rem 0' }}>None</p>}
+                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.8rem', textAlign: 'center', fontStyle: 'italic', margin: '0.75rem 0' }}>None</p>}
                                     </div>
                                 </div>
 
                                 {/* 80-89% Column */}
                                 <div style={{ display: 'flex', flexDirection: 'column', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' }}>
-                                    <div style={{ background: '#3b82f615', padding: '0.75rem', borderBottom: '2px solid #3b82f6', textAlign: 'center', fontWeight: 'bold', color: '#60a5fa', fontSize: '0.85rem' }}>80-89% Match</div>
-                                    <div style={{ maxHeight: '260px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ background: '#3b82f615', padding: '0.6rem', borderBottom: '2px solid #3b82f6', textAlign: 'center', fontWeight: 'bold', color: '#60a5fa', fontSize: '0.85rem' }}>80-89% Match</div>
+                                    <div className="match-ledger-column" style={{ maxHeight: '210px', overflowY: 'auto', padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                                         {allMatches.filter(s => s.score >= 0.8 && s.score < 0.9).length > 0 ? allMatches.filter(s => s.score >= 0.8 && s.score < 0.9).map((match, i) => (
-                                            <div key={i} style={{ background: '#1e293b', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid #3b82f6`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontWeight: '600', color: 'white', fontSize: '0.85rem' }}>{match.skill}</span>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#3b82f6' }}>{(match.score * 100).toFixed(0)}%</span>
+                                            <div key={i} style={{ background: '#1e293b', padding: '0.6rem', borderRadius: '8px', borderLeft: `4px solid #3b82f6`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontWeight: '600', color: 'white', fontSize: '0.8rem' }}>{match.skill}</span>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#3b82f6' }}>{(match.score * 100).toFixed(0)}%</span>
                                             </div>
-                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', fontStyle: 'italic', margin: '1rem 0' }}>None</p>}
+                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.8rem', textAlign: 'center', fontStyle: 'italic', margin: '0.75rem 0' }}>None</p>}
                                     </div>
                                 </div>
 
                                 {/* 70-79% Column */}
                                 <div style={{ display: 'flex', flexDirection: 'column', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' }}>
-                                    <div style={{ background: '#f59e0b15', padding: '0.75rem', borderBottom: '2px solid #f59e0b', textAlign: 'center', fontWeight: 'bold', color: '#fbbf24', fontSize: '0.85rem' }}>70-79% Match</div>
-                                    <div style={{ maxHeight: '260px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ background: '#f59e0b15', padding: '0.6rem', borderBottom: '2px solid #f59e0b', textAlign: 'center', fontWeight: 'bold', color: '#fbbf24', fontSize: '0.85rem' }}>70-79% Match</div>
+                                    <div className="match-ledger-column" style={{ maxHeight: '210px', overflowY: 'auto', padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                                         {allMatches.filter(s => s.score >= 0.7 && s.score < 0.8).length > 0 ? allMatches.filter(s => s.score >= 0.7 && s.score < 0.8).map((match, i) => (
-                                            <div key={i} style={{ background: '#1e293b', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid #f59e0b`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontWeight: '600', color: 'white', fontSize: '0.85rem' }}>{match.skill}</span>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#f59e0b' }}>{(match.score * 100).toFixed(0)}%</span>
+                                            <div key={i} style={{ background: '#1e293b', padding: '0.6rem', borderRadius: '8px', borderLeft: `4px solid #f59e0b`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontWeight: '600', color: 'white', fontSize: '0.8rem' }}>{match.skill}</span>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#f59e0b' }}>{(match.score * 100).toFixed(0)}%</span>
                                             </div>
-                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', fontStyle: 'italic', margin: '1rem 0' }}>None</p>}
+                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.8rem', textAlign: 'center', fontStyle: 'italic', margin: '0.75rem 0' }}>None</p>}
                                     </div>
                                 </div>
 
                                 {/* Below 70% Column */}
                                 <div style={{ display: 'flex', flexDirection: 'column', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', overflow: 'hidden' }}>
-                                    <div style={{ background: '#ef444415', padding: '0.75rem', borderBottom: '2px solid #ef4444', textAlign: 'center', fontWeight: 'bold', color: '#f87171', fontSize: '0.85rem' }}>Below 70%</div>
-                                    <div style={{ maxHeight: '260px', overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ background: '#ef444415', padding: '0.6rem', borderBottom: '2px solid #ef4444', textAlign: 'center', fontWeight: 'bold', color: '#f87171', fontSize: '0.85rem' }}>Below 70%</div>
+                                    <div className="match-ledger-column" style={{ maxHeight: '210px', overflowY: 'auto', padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                                         {allMatches.filter(s => s.score < 0.7).length > 0 ? allMatches.filter(s => s.score < 0.7).map((match, i) => (
-                                            <div key={i} style={{ background: '#1e293b', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid #ef4444`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontWeight: '600', color: 'white', fontSize: '0.85rem' }}>{match.skill}</span>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#ef4444' }}>{(match.score * 100).toFixed(0)}%</span>
+                                            <div key={i} style={{ background: '#1e293b', padding: '0.6rem', borderRadius: '8px', borderLeft: `4px solid #ef4444`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontWeight: '600', color: 'white', fontSize: '0.8rem' }}>{match.skill}</span>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#ef4444' }}>{(match.score * 100).toFixed(0)}%</span>
                                             </div>
-                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', fontStyle: 'italic', margin: '1rem 0' }}>None</p>}
+                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.8rem', textAlign: 'center', fontStyle: 'italic', margin: '0.75rem 0' }}>None</p>}
                                     </div>
                                 </div>
 
                             </div>
                         </div>
                     </div>
+                    )}
 
-                    {/* Section 4: Category Skill Box Matrix */}
+                    {/* Section 4: Enhanced Category Skill Domain Visualization */}
+                    {activeViz === 'domain' && (
                     <div
-                        ref={skillsMapRef}
-                        className={`content-card category-skill-map ${skillsMapVisible ? 'is-visible' : ''}`}
+                        className={`content-card ${skillsMapVisible ? 'is-visible' : ''}`}
                         style={{
-                            background: 'linear-gradient(180deg, #141d2e 0%, #0f172a 100%)',
-                            borderTop: '4px solid #0ea5e9',
-                            padding: '1.5rem'
+                            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                            borderTop: '5px solid #06b6d4',
+                            padding: '1.35rem',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                            borderRadius: '16px'
                         }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-                            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0' }}>
-                                <Layers size={20} color="#38bdf8" />
-                                Domain Category Skill Boxes
-                            </h3>
-                            <div className="category-skill-legend">
-                                <span className="legend-chip legend-exact">Exact</span>
-                                <span className="legend-chip legend-strong">Strong</span>
-                                <span className="legend-chip legend-moderate">Moderate</span>
-                                <span className="legend-chip legend-missing">Missing</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+                            <div>
+                                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px', color: '#f1f5f9', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '0.3px' }}>
+                                    <div style={{ background: 'rgba(6, 182, 212, 0.2)', padding: '0.5rem', borderRadius: '10px' }}>
+                                        <Layers size={24} color="#06b6d4" />
+                                    </div>
+                                    Domain Skill Categories
+                                </h3>
+                                <p style={{ margin: '0.4rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>Interactive skill inventory across {treemapTiles.length} professional domains</p>
+                            </div>
+                            <div className="category-skill-legend" style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                                <span className="legend-chip legend-exact">✓ Exact</span>
+                                <span className="legend-chip legend-strong">⬆ Strong</span>
+                                <span className="legend-chip legend-moderate">→ Moderate</span>
+                                <span className="legend-chip legend-missing">✗ Missing</span>
                             </div>
                         </div>
 
-                        <p style={{ margin: '0.5rem 0 1rem', color: '#94a3b8', fontSize: '0.9rem' }}>
-                            Treemap layout: larger tiles represent larger skill categories, and inner partitions represent individual skill names with match status colors.
-                        </p>
-                        <p style={{ margin: '0 0 0.8rem', color: '#7dd3fc', fontSize: '0.8rem', fontWeight: 700 }}>
-                            Showing {treemapTiles.length} categories in this run.
-                        </p>
+                        <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '0.85rem', marginBottom: '1.1rem', border: '1px solid rgba(6,182,212,0.2)' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                    <div style={{ background: 'rgba(6,182,212,0.15)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 700, color: '#22d3ee' }}>Total Categories</div>
+                                    <span style={{ fontSize: '1.3rem', fontWeight: 900, color: '#f1f5f9' }}>{treemapTiles.length}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                    <div style={{ background: 'rgba(34,197,94,0.15)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 700, color: '#86efac' }}>Avg Coverage</div>
+                                    <span style={{ fontSize: '1.3rem', fontWeight: 900, color: '#f1f5f9' }}>{Math.round(treemapTiles.reduce((sum, t) => sum + t.coverage, 0) / Math.max(1, treemapTiles.length))}%</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                    <div style={{ background: 'rgba(239,68,68,0.15)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 700, color: '#fca5a5' }}>Total Skills</div>
+                                    <span style={{ fontSize: '1.3rem', fontWeight: 900, color: '#f1f5f9' }}>{treemapTiles.reduce((sum, t) => sum + t.total, 0)}</span>
+                                </div>
+                            </div>
+                        </div>
 
-                        <div className="category-skill-grid">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.6rem', width: '100%' }}>
                             {treemapTiles.length > 0 ? (
                                 treemapTiles.map((item, categoryIndex) => {
-                                    const ratio = item.total / maxCategoryTileSize;
-                                    const colSpan = Math.max(3, Math.min(5, Math.round(2 + (ratio * 3))));
-                                    const categoryBorder = item.coverage >= 75
-                                        ? 'rgba(16,185,129,0.55)'
-                                        : item.coverage >= 45
-                                            ? 'rgba(59,130,246,0.55)'
-                                            : 'rgba(239,68,68,0.55)';
-                                    const swatch = CATEGORY_SWATCHES[categoryIndex % CATEGORY_SWATCHES.length];
+                                    const coveragePercent = item.coverage;
+                                    const coverageColor = coveragePercent >= 80 ? '#10b981' : coveragePercent >= 50 ? '#f59e0b' : '#ef4444';
+                                    const coverageOpacity = coveragePercent >= 80 ? 0.2 : coveragePercent >= 50 ? 0.2 : 0.2;
+                                    const categoryGradients = [
+                                        { from: '#0ea5e9', to: '#0369a1' },
+                                        { from: '#10b981', to: '#047857' },
+                                        { from: '#f59e0b', to: '#d97706' },
+                                        { from: '#8b5cf6', to: '#6d28d9' },
+                                        { from: '#ec4899', to: '#be185d' },
+                                        { from: '#06b6d4', to: '#0891b2' },
+                                        { from: '#3b82f6', to: '#1d4ed8' },
+                                        { from: '#14b8a6', to: '#0d9488' },
+                                    ];
+                                    const gradient = categoryGradients[categoryIndex % categoryGradients.length];
 
                                     return (
-                                    <div
-                                        key={`${item.category}-${categoryIndex}`}
-                                        className="category-box"
-                                        style={{
-                                            '--fall-delay': `${categoryIndex * 85}ms`,
-                                            '--tile-col-span': colSpan,
-                                            borderColor: categoryBorder,
-                                            background: `linear-gradient(180deg, ${swatch}22 0%, #13233d 84%)`,
-                                        }}
-                                    >
-                                        <div className="category-box-header">
-                                            <h4>{item.category}</h4>
-                                            <span>{item.present}/{item.total} • {item.coverage}%</span>
-                                        </div>
-
-                                        <div className="skill-mini-grid">
-                                            {item.skillItems.map((skillItem, skillIndex) => (
-                                                <div
-                                                    key={`${item.category}-${skillItem.skill}-${skillIndex}`}
-                                                    className={`skill-mini-box ${skillItem.status}`}
-                                                    style={{ '--fall-delay': `${(categoryIndex * 85) + (skillIndex * 22)}ms` }}
-                                                    title={`${skillItem.skill} (${skillItem.status})`}
-                                                >
-                                                    {skillItem.skill}
+                                        <div
+                                            key={`${item.category}-${categoryIndex}`}
+                                            style={{
+                                                background: `linear-gradient(135deg, ${gradient.from}${coverageOpacity ? '25' : '10'} 0%, ${gradient.to}${coverageOpacity ? '08' : '03'} 100%)`,
+                                                border: `2px solid ${gradient.from}50`,
+                                                borderRadius: '14px',
+                                                padding: '0.75rem',
+                                                boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                                                transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                                                opacity: 1,
+                                                transform: 'translateY(0) scale(1)',
+                                                animation: `boxFallIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) ${categoryIndex * 75}ms forwards`
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <h4 style={{ margin: 0, color: '#f1f5f9', fontSize: '0.95rem', fontWeight: 900, letterSpacing: '0.3px' }}>
+                                                        {item.category}
+                                                    </h4>
+                                                    <p style={{ margin: '0.22rem 0 0', color: '#cbd5e1', fontSize: '0.74rem', fontWeight: 600 }}>
+                                                        {item.total} skills • {item.coverage}% coverage
+                                                    </p>
                                                 </div>
-                                            ))}
+                                                <div style={{ 
+                                                    background: `rgba(${coverageColor.includes('10b981') ? '16,185,129' : coverageColor.includes('f59e0b') ? '245,158,11' : '239,68,68'}, 0.2)`,
+                                                    padding: '0.38rem 0.62rem',
+                                                    borderRadius: '10px',
+                                                    textAlign: 'right',
+                                                    minWidth: '58px'
+                                                }}>
+                                                    <div style={{ fontSize: '1rem', fontWeight: 900, color: coverageColor }}>
+                                                        {item.present}/{item.total}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.64rem', color: '#cbd5e1', marginTop: '0.12rem' }}>matched</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Coverage Progress Bar */}
+                                            <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px', height: '5px', marginBottom: '0.72rem', overflow: 'hidden' }}>
+                                                <div style={{
+                                                    background: `linear-gradient(90deg, ${gradient.from}, ${gradient.to})`,
+                                                    height: '100%',
+                                                    width: `${item.coverage}%`,
+                                                    borderRadius: '8px',
+                                                    transition: 'width 0.6s ease'
+                                                }} />
+                                            </div>
+
+                                            <div className="skill-mini-grid" style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))',
+                                                gap: '0.5rem',
+                                                marginTop: '0.58rem'
+                                            }}>
+                                                {item.skillItems.map((skillItem, skillIndex) => {
+                                                    const statusColors = {
+                                                        exact: { bg: '#86efac', bgLight: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.5)' },
+                                                        strong: { bg: '#93c5fd', bgLight: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.5)' },
+                                                        moderate: { bg: '#fcd34d', bgLight: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.5)' },
+                                                        missing: { bg: '#fca5a5', bgLight: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.5)' }
+                                                    };
+                                                    const colors = statusColors[skillItem.status] || statusColors.moderate;
+
+                                                    return (
+                                                        <div
+                                                            key={`${item.category}-${skillItem.skill}-${skillIndex}`}
+                                                            className={`skill-mini-box ${skillItem.status}`}
+                                                            style={{
+                                                                background: colors.bgLight,
+                                                                border: `1.5px solid ${colors.border}`,
+                                                                color: colors.bg,
+                                                                borderRadius: '8px',
+                                                                padding: '0.36rem 0.45rem',
+                                                                fontSize: '0.7rem',
+                                                                fontWeight: 700,
+                                                                textAlign: 'center',
+                                                                minHeight: '30px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                lineHeight: 1.2,
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                whiteSpace: 'normal',
+                                                                wordBreak: 'break-word',
+                                                                transition: 'all 0.3s ease',
+                                                                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                                                                animation: `boxFallIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${(categoryIndex * 75) + (skillIndex * 18)}ms forwards`,
+                                                                cursor: 'default'
+                                                            }}
+                                                            title={`${skillItem.skill} (${skillItem.status})`}
+                                                        >
+                                                            {skillItem.skill}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
-                                );
+                                    );
                                 })
                             ) : (
-                                <div style={{ color: '#94a3b8', fontStyle: 'italic' }}>No category/skill map available for this run.</div>
+                                <div style={{ gridColumn: '1 / -1', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '2rem', fontSize: '0.95rem' }}>
+                                    📊 No category/skill map available for this run.
+                                </div>
                             )}
                         </div>
                     </div>
+                    )}
 
                     {/* Section 5: Additional Information */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 1fr)', gap: '2rem' }}>
+                    {activeViz === 'talents' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr)', gap: '1.25rem' }}>
                         {/* 6. Extra Skills Cloud */}
-                        <div className="content-card" style={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', padding: '2.5rem', borderTop: `4px solid ${COLORS.warning}` }}>
+                        <div className="content-card" style={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', padding: '1.4rem', borderTop: `4px solid ${COLORS.warning}` }}>
                             <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
                                 <Zap size={20} color={COLORS.warning} />
                                 Unsolicited Candidate Talents
@@ -712,9 +1007,19 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data }) => {
                             </div>
                         </div>
                     </div>
+                    )}
 
                 </div>
             </div>
+    );
+
+    if (isEmbedded) {
+        return panelContent;
+    }
+
+    const modalContent = (
+        <div className="modal-overlay" style={{ zIndex: 10000, background: 'rgba(0,0,0,0.85)' }}>
+            {panelContent}
         </div>
     );
 

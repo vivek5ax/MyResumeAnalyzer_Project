@@ -4,8 +4,11 @@ python-multipart
 pdfplumber
 docx2txt
 python-docx
-docx
 pytesseract
 pdf2image
 spacy
 sentence-transformers
+matplotlib
+seaborn
+reportlab
+numpy

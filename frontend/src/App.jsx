@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import FileUpload from './components/FileUpload';
 import JdInput from './components/JdInput';
 import Preview from './components/Preview';
-import SkillsModal from './components/SkillsModal';
-import BertModal from './components/BertModal';
+import SkillMatchingModal from './components/SkillMatchingModal';
 import VisualizationModal from './components/VisualizationModal';
+import PdfProgressModal from './components/PdfProgressModal';
+import ContextChatbot from './components/ContextChatbot';
+import MultiResumeAnalysis from './components/MultiResumeAnalysis';
 import {
     ChevronDown,
     Menu,
@@ -14,13 +16,11 @@ import {
     BarChart3,
     Workflow,
     FileDown,
-    Layers3,
     CheckCircle2,
     Loader2,
     Circle,
-    Briefcase,
-    UserRound,
     Microscope,
+    Files,
 } from 'lucide-react';
 
 function App() {
@@ -35,19 +35,13 @@ function App() {
     const [activePage, setActivePage] = useState('workspace');
     const [stageStep, setStageStep] = useState(0);
 
-    const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
-    const [isBertModalOpen, setIsBertModalOpen] = useState(false);
-    const [isVizModalOpen, setIsVizModalOpen] = useState(false);
-
-    const [isSkillsClosing, setIsSkillsClosing] = useState(false);
-    const [isBertClosing, setIsBertClosing] = useState(false);
-    const [isVizClosing, setIsVizClosing] = useState(false);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [pdfProgress, setPdfProgress] = useState(0);
     const [showPdfProgress, setShowPdfProgress] = useState(false);
     const [pdfProgressLabel, setPdfProgressLabel] = useState('Preparing report data...');
     const [isHighlightEnabled, setIsHighlightEnabled] = useState(false);
-    const [evidenceView, setEvidenceView] = useState('ready');
+    const [evidencePersona, setEvidencePersona] = useState('hr');
+    const [evidenceSectionTab, setEvidenceSectionTab] = useState('overview');
     const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -134,106 +128,80 @@ function App() {
     };
 
     const handleExportPdf = async () => {
-        if (!extractedData) return;
+        if (!extractedData || isGeneratingPDF) return;
 
-        let progressTimer;
+        // ── Phase schedule: label, target%, duration (ms) ─────────────────
+        const PHASES = [
+            { label: 'Preparing analysis data…',        pct: 12,  ms: 700  },
+            { label: 'Initialising chart engine…',       pct: 28,  ms: 1200 },
+            { label: 'Rendering gauge & radar charts…',  pct: 44,  ms: 1400 },
+            { label: 'Building visualisation panels…',   pct: 58,  ms: 1200 },
+            { label: 'Composing match ledger table…',    pct: 70,  ms: 1000 },
+            { label: 'Finalising page layout…',          pct: 82,  ms: 1000 },
+            { label: 'Compiling PDF document…',          pct: 90,  ms: 800  },
+            { label: 'Almost done — preparing download…',pct: 96,  ms: 600  },
+        ];
+
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+
+        setIsGeneratingPDF(true);
+        setShowPdfProgress(true);
+        setPdfProgress(0);
+        setPdfProgressLabel('Starting…');
+
+        // Start animated phase progression (runs concurrently with fetch)
+        const animatePhases = async () => {
+            for (const phase of PHASES) {
+                setPdfProgress(phase.pct);
+                setPdfProgressLabel(phase.label);
+                await wait(phase.ms);
+            }
+        };
 
         try {
-            setIsGeneratingPDF(true);
-            setShowPdfProgress(true);
-            setPdfProgress(4);
-            setPdfProgressLabel('Preparing report data...');
-
-            progressTimer = window.setInterval(() => {
-                setPdfProgress((prev) => {
-                    if (prev >= 90) return 90;
-                    if (prev < 35) return prev + 5;
-                    if (prev < 70) return prev + 3;
-                    return prev + 1;
-                });
-            }, 260);
-
-            window.setTimeout(() => {
-                setPdfProgressLabel('Rendering visual sections...');
-            }, 1600);
-
-            window.setTimeout(() => {
-                setPdfProgressLabel('Finalizing PDF export...');
-            }, 4200);
-
-            const response = await fetch('http://localhost:8000/export-pdf', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(extractedData)
-            });
+            // Kick off UI animation and fetch simultaneously
+            const [, response] = await Promise.all([
+                animatePhases(),
+                fetch('http://localhost:8000/export-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(extractedData),
+                }),
+            ]);
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'PDF export failed');
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || `Server error ${response.status}`);
             }
 
-            if (progressTimer) {
-                window.clearInterval(progressTimer);
-            }
-
+            // Complete progress arc
             setPdfProgress(100);
-            setPdfProgressLabel('Download ready...');
+            setPdfProgressLabel('Report ready — downloading…');
 
             const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `Resume_Analysis_Report_${extractedData.domain || 'General'}.pdf`;
+            const domain  = extractedData?.domain || 'general';
+            const ts      = new Date().toISOString().slice(0, 10);
+            const url     = URL.createObjectURL(blob);
+            const anchor  = document.createElement('a');
+            anchor.href   = url;
+            anchor.download = `Resume_Analysis_${domain}_${ts}.pdf`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            URL.revokeObjectURL(url);
 
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-
-            await new Promise((resolve) => window.setTimeout(resolve, 500));
-            setShowPdfProgress(false);
+            await wait(900);
         } catch (err) {
-            if (progressTimer) {
-                window.clearInterval(progressTimer);
-            }
-            setPdfProgress(100);
-            setPdfProgressLabel('Export failed');
-            setError(err.message || 'Failed to generate PDF');
-            await new Promise((resolve) => window.setTimeout(resolve, 900));
-            setShowPdfProgress(false);
+            console.error('PDF generation error:', err);
+            setError(err?.message || 'Failed to generate PDF. Please try again.');
         } finally {
-            if (progressTimer) {
-                window.clearInterval(progressTimer);
-            }
             setIsGeneratingPDF(false);
+            setTimeout(() => {
+                setShowPdfProgress(false);
+                setPdfProgress(0);
+                setPdfProgressLabel('Preparing report data…');
+            }, 500);
         }
-    };
-
-    const closeSkillsModal = () => {
-        setIsSkillsClosing(true);
-        setTimeout(() => {
-            setIsSkillsModalOpen(false);
-            setIsSkillsClosing(false);
-        }, 350);
-    };
-
-    const closeBertModal = () => {
-        setIsBertClosing(true);
-        setTimeout(() => {
-            setIsBertModalOpen(false);
-            setIsBertClosing(false);
-        }, 350);
-    };
-
-    const closeVizModal = () => {
-        setIsVizClosing(true);
-        setTimeout(() => {
-            setIsVizModalOpen(false);
-            setIsVizClosing(false);
-        }, 350);
     };
 
     const handleStartNewRun = () => {
@@ -245,12 +213,7 @@ function App() {
         setLoading(false);
         setStageStep(0);
         setIsHighlightEnabled(false);
-        setIsSkillsModalOpen(false);
-        setIsBertModalOpen(false);
-        setIsVizModalOpen(false);
-        setIsSkillsClosing(false);
-        setIsBertClosing(false);
-        setIsVizClosing(false);
+        setEvidencePersona('hr');
         setActivePage('workspace');
         setIsSidebarOpen(false);
         setShowPdfProgress(false);
@@ -262,7 +225,10 @@ function App() {
     const selectedDomain = domainOptions.find(opt => opt.id === domain);
     const navItems = [
         { id: 'workspace', label: 'Workspace', icon: LayoutDashboard },
+        { id: 'multi-resume', label: 'Multi Resume', icon: Files },
         { id: 'documents', label: 'Documents', icon: FileText },
+        { id: 'skill-matching', label: 'Skill Matching', icon: Workflow },
+        { id: 'visuals', label: 'Visualization', icon: BarChart3 },
         { id: 'evidence', label: 'Evidence', icon: Microscope },
     ];
 
@@ -273,6 +239,47 @@ function App() {
     const summary = extractedData?.bert_results?.summary || {};
     const skillPartition = extractedData?.bert_results?.skill_partition || {};
     const matchEvidence = extractedData?.bert_results?.match_evidence || [];
+    const evidenceLayer = extractedData?.evidence_layer || {};
+    const hrDecisionLayer = extractedData?.hr_decision_layer || {};
+    const candidateDecisionLayer = extractedData?.candidate_decision_layer || {};
+    const evidenceHeader = evidenceLayer?.page_header || {};
+    const sourceHealth = evidenceLayer?.source_health || {};
+    const decisionCards = Array.isArray(evidenceLayer?.decision_snapshot?.cards) ? evidenceLayer.decision_snapshot.cards : [];
+    const roleFitNarrative = evidenceLayer?.role_fit_narrative || {};
+    const candidateImprovementPlan = evidenceLayer?.candidate_improvement_plan || {};
+    const qualityReliability = evidenceLayer?.quality_reliability || {};
+    const aiEnrichment = extractedData?.ai_enrichment || {};
+    const aiStatus = String(sourceHealth?.ai_status || aiEnrichment?.status || 'disabled').toLowerCase();
+    const aiQuality = aiEnrichment?.quality || {};
+    const aiTriageFromSchema = Array.isArray(evidenceLayer?.gap_prioritization?.items) ? evidenceLayer.gap_prioritization.items : [];
+    const aiFocusFromSchema = [];
+    const aiMappingsFromSchema = Array.isArray(evidenceLayer?.term_intelligence?.mappings) ? evidenceLayer.term_intelligence.mappings : [];
+    const aiTriage = aiTriageFromSchema.length ? aiTriageFromSchema : (Array.isArray(aiEnrichment?.missing_skill_triage) ? aiEnrichment.missing_skill_triage : []);
+    const aiInterviewFocus = aiFocusFromSchema.length ? aiFocusFromSchema : (Array.isArray(aiEnrichment?.interview_focus) ? aiEnrichment.interview_focus : []);
+    const aiMappings = aiMappingsFromSchema.length ? aiMappingsFromSchema : (Array.isArray(aiEnrichment?.normalization?.mappings) ? aiEnrichment.normalization.mappings : []);
+    const aiWarningsRaw = [
+        ...(Array.isArray(sourceHealth?.warnings) ? sourceHealth.warnings : []),
+        ...(Array.isArray(aiQuality?.warnings) ? aiQuality.warnings : []),
+    ];
+    const aiWarnings = Array.from(new Set(aiWarningsRaw.filter(Boolean).map((v) => String(v).trim()).filter(Boolean)));
+    const aiCoveragePercent = Math.max(0, Math.min(100, Math.round((Number(sourceHealth?.ai_coverage_score ?? aiQuality?.coverage_score ?? 0)) * 100)));
+    const aiRisk = String(sourceHealth?.hallucination_risk || aiQuality?.hallucination_risk || 'medium').toLowerCase();
+    const aiModel = aiEnrichment?.model || 'Not available';
+
+    // HR Decision Layer Extraction
+    const hrExecutiveRec = hrDecisionLayer?.executive_recommendation || {};
+    const hrSkillsAnalysis = hrDecisionLayer?.skills_requirement_analysis || {};
+    const hrRiskAssessment = hrDecisionLayer?.risk_assessment || {};
+    const hrQuickFacts = hrDecisionLayer?.quick_facts || {};
+    const hrHiringReadiness = hrDecisionLayer?.hiring_readiness || {};
+
+    // Candidate Decision Layer Extraction
+    const candidateRoleFit = candidateDecisionLayer?.role_fit_assessment || {};
+    const candidateEvidence = candidateDecisionLayer?.evidence_strength || {};
+    const candidateGapRoadmap = candidateDecisionLayer?.gap_closure_roadmap || [];
+    const candidateActionPlan = candidateDecisionLayer?.action_plan || {};
+    const candidateCareer = candidateDecisionLayer?.career_insights || {};
+    const candidateGuidance = candidateDecisionLayer?.overall_guidance || {};
 
     const getWordCount = (text) => {
         if (!text || !text.trim()) return 0;
@@ -417,6 +424,39 @@ function App() {
         return pattern.test(text);
     };
 
+    const titleCaseToken = (value) => {
+        if (!value || typeof value !== 'string') return 'Unknown';
+        return value
+            .split('_')
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+    };
+
+    const clampPercent = (value) => Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+
+    const formatIsoTimestamp = (value) => {
+        if (!value || typeof value !== 'string') return 'Not available';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'Not available';
+        return date.toLocaleString();
+    };
+
+    const toHumanLine = (value, prefix = '') => {
+        const text = String(value || '').trim();
+        if (!text) return '';
+        const hasVerb = /\b(is|are|has|have|shows|demonstrates|indicates|suggests|requires|needs|lacks|proved|proven|improves|supports)\b/i.test(text);
+        if (hasVerb || text.endsWith('.')) return text;
+        return `${prefix}${text}.`;
+    };
+
+    const aiStatusMeta = (() => {
+        if (aiStatus === 'success') return { label: 'Active', tone: 'success' };
+        if (aiStatus === 'disabled') return { label: 'Disabled', tone: 'disabled' };
+        if (aiStatus === 'failed') return { label: 'Failed', tone: 'failed' };
+        return { label: titleCaseToken(aiStatus), tone: 'disabled' };
+    })();
+
     const buildInlineHighlights = (text, terms = [], tone = 'neutral') => {
         if (!text || typeof text !== 'string') return 'No context captured.';
 
@@ -470,7 +510,7 @@ function App() {
         if (activePage === 'evidence') {
             if (!extractedData) {
                 return (
-                    <section className="documents-panel fade-in neo-panel">
+                    <section className="documents-panel evidence-layer-panel fade-in neo-panel">
                         <div className="results-empty">
                             Run an assessment to generate traceable match evidence with JD and resume context snippets.
                         </div>
@@ -507,9 +547,82 @@ function App() {
                 };
             });
 
-            const exactRows = evidenceRows.filter((row) => row.matchType === 'exact');
-            const semanticRows = evidenceRows.filter((row) => row.matchType === 'strong_semantic' || row.matchType === 'moderate_semantic');
-            const missingRows = evidenceRows.filter((row) => row.matchType === 'missing');
+            const traceTabs = Array.isArray(evidenceLayer?.evidence_trace?.tabs) ? evidenceLayer.evidence_trace.tabs : [];
+            const mapTraceRows = (tabId) => {
+                const tab = traceTabs.find((entry) => entry?.tab_id === tabId);
+                const rows = Array.isArray(tab?.rows) ? tab.rows : [];
+                return rows.slice(0, 24).map((item, idx) => {
+                    const matchType = item.match_type || (tabId === 'ready_signals' ? 'exact' : tabId === 'risk_gaps' ? 'missing' : 'strong_semantic');
+                    const confidencePercent = Math.round((Number(item.confidence || 0)) * 100);
+                    const jdSnippet = compactSnippet(item.jd_context, 220);
+                    const resumeSnippet = compactSnippet(item.resume_context, 220);
+                    const highlightTone = matchType === 'exact' ? 'exact' : (matchType === 'strong_semantic' || matchType === 'moderate_semantic' ? 'semantic' : matchType);
+                    const isSemantic = matchType === 'strong_semantic' || matchType === 'moderate_semantic';
+                    return {
+                        id: `${item.skill || 'trace-skill'}-${idx}-${tabId}`,
+                        skill: item.skill || 'Unknown Skill',
+                        matchType,
+                        confidencePercent,
+                        jdSkill: item.skill || '-',
+                        resumeSkill: item.skill || '-',
+                        jdSnippet,
+                        resumeSnippet,
+                        highlightTerms: [item.skill].filter(Boolean),
+                        highlightTone,
+                        isSemantic,
+                        exactWordMissingInResume: isSemantic,
+                    };
+                });
+            };
+
+            const readyRowsFromSchema = mapTraceRows('ready_signals');
+            const validationRowsFromSchema = mapTraceRows('needs_validation');
+            const riskRowsFromSchema = mapTraceRows('risk_gaps');
+
+            // Deduplication logic: no skill appears in more than one lane
+            const deduplicateLanes = (allRows) => {
+                const seenSkills = new Set();
+                const exactRows = [];
+                const semanticRows = [];
+                const missingRows = [];
+
+                // Priority 1: Collect all exact matches (highest confidence)
+                allRows.filter((row) => row.matchType === 'exact').forEach((row) => {
+                    const skillKey = (row.skill || '').toLowerCase().trim();
+                    if (skillKey && !seenSkills.has(skillKey)) {
+                        exactRows.push(row);
+                        seenSkills.add(skillKey);
+                    }
+                });
+
+                // Priority 2: Collect semantic matches (not already in exact)
+                allRows.filter((row) => row.matchType === 'strong_semantic' || row.matchType === 'moderate_semantic').forEach((row) => {
+                    const skillKey = (row.skill || '').toLowerCase().trim();
+                    if (skillKey && !seenSkills.has(skillKey)) {
+                        semanticRows.push(row);
+                        seenSkills.add(skillKey);
+                    }
+                });
+
+                // Priority 3: Collect missing skills (not already in exact or semantic)
+                allRows.filter((row) => row.matchType === 'missing').forEach((row) => {
+                    const skillKey = (row.skill || '').toLowerCase().trim();
+                    if (skillKey && !seenSkills.has(skillKey)) {
+                        missingRows.push(row);
+                        seenSkills.add(skillKey);
+                    }
+                });
+
+                return { exactRows, semanticRows, missingRows };
+            };
+
+            const { exactRows, semanticRows, missingRows } = readyRowsFromSchema.length || validationRowsFromSchema.length || riskRowsFromSchema.length
+                ? {
+                    exactRows: readyRowsFromSchema,
+                    semanticRows: validationRowsFromSchema,
+                    missingRows: riskRowsFromSchema,
+                  }
+                : deduplicateLanes(evidenceRows);
 
             const averageConfidence = evidenceRows.length
                 ? Math.round(evidenceRows.reduce((acc, row) => acc + row.confidencePercent, 0) / evidenceRows.length)
@@ -524,142 +637,712 @@ function App() {
             const topStrengths = exactRows.slice(0, 4).map((row) => row.skill);
             const topRisks = missingRows.slice(0, 4).map((row) => row.skill);
             const semanticProbeRows = semanticRows.filter((row) => row.exactWordMissingInResume).slice(0, 3);
+            const aiTopMappings = aiMappings.slice(0, 8);
+            const fallbackRiskSkills = topRisks.length ? topRisks : missingJdSkills.slice(0, 4);
+            const displayTriage = aiTriage.length ? aiTriage.slice(0, 6) : fallbackRiskSkills.map((skill, index) => ({
+                skill,
+                priority: index < 2 ? 'role_critical' : index < 4 ? 'important' : 'nice_to_have',
+                impact: index < 2 ? 'high' : 'medium',
+                trainability: index < 2 ? 'hard_to_train_fast' : 'trainable_mid_term',
+                confidence: Math.max(0.45, 0.82 - (index * 0.08)),
+                reason: `${skill} is currently a missing signal for this role and should be validated during screening.`,
+            }));
+            const displayInterviewFocus = aiInterviewFocus.length ? aiInterviewFocus.slice(0, 5) : semanticProbeRows.map((row) => ({
+                topic: row.skill,
+                question: `Walk me through a real delivery where you used ${row.skill}. What was your direct ownership and outcome?`,
+                objective: `Confirm practical depth behind semantic match for ${row.skill}.`,
+                expected_signal: 'Candidate provides measurable outcomes and concrete implementation details.',
+                confidence: Math.max(0.45, Math.min(0.92, row.confidencePercent / 100)),
+            }));
 
-            const laneMap = {
-                ready: {
-                    key: 'ready',
-                    label: 'Ready Signals',
-                    rows: exactRows,
-                    cardClass: 'exact',
-                    tone: 'exact',
-                    caption: 'Directly present in candidate profile and JD evidence.',
-                },
-                validation: {
-                    key: 'validation',
-                    label: 'Needs Validation',
-                    rows: semanticRows,
-                    cardClass: 'semantic',
-                    tone: 'semantic',
-                    caption: 'Contextual skill alignment; verify practical depth during interview.',
-                },
-                risk: {
-                    key: 'risk',
-                    label: 'Risk Gaps',
-                    rows: missingRows,
-                    cardClass: 'missing',
-                    tone: 'missing',
-                    caption: 'Critical mismatch signal. Needs training plan or alternative candidate coverage.',
-                },
+            const triageCriticalCount = displayTriage.filter((item) => String(item.priority || '').toLowerCase() === 'role_critical').length;
+            const triageHighImpactCount = displayTriage.filter((item) => String(item.impact || '').toLowerCase() === 'high').length;
+            const decisionConfidence = clampPercent((alignmentScore * 0.45) + (averageConfidence * 0.35) + (aiCoveragePercent * 0.2));
+            const riskPressure = clampPercent((missingRows.length / Math.max(1, exactRows.length + missingRows.length)) * 100);
+            const interviewReadiness = clampPercent((exactRows.length * 2.1) + (semanticRows.length * 1.2) - (missingRows.length * 1.3) + (displayInterviewFocus.length * 3) + (aiCoveragePercent * 0.15));
+            const aiUpdatedAt = formatIsoTimestamp(evidenceLayer?.generated_at || aiEnrichment?.created_at);
+            const sectionSourceBreakdown = Array.isArray(qualityReliability?.section_source_breakdown) ? qualityReliability.section_source_breakdown : [];
+            const qualityNotes = Array.isArray(qualityReliability?.global_notes) ? qualityReliability.global_notes.filter(Boolean) : [];
+
+            const extractEvidenceSkill = (item) => {
+                if (!item) return '';
+                if (typeof item === 'object') {
+                    return String(item.skill || item.name || item.term || item.label || item.title || '').trim();
+                }
+                const cleaned = String(item || '')
+                    .trim()
+                    .replace(/^Candidate shows strong evidence in\s+/i, '')
+                    .replace(/^A current hiring risk is missing evidence in\s+/i, '')
+                    .replace(/^A current hiring risk is\s+/i, '')
+                    .replace(/^Missing evidence in\s+/i, '')
+                    .replace(/^Strong evidence in\s+/i, '')
+                    .replace(/\s+can be improved in the short to mid term through targeted projects and mentorship\.?$/i, '')
+                    .replace(/\.$/, '')
+                    .trim();
+                return cleaned;
             };
 
-            const activeLane = laneMap[evidenceView] || laneMap.ready;
+            const narrativeStrengthsRaw = Array.isArray(roleFitNarrative?.strengths) ? roleFitNarrative.strengths : [];
+            const narrativeGapsRaw = Array.isArray(roleFitNarrative?.blocking_gaps) ? roleFitNarrative.blocking_gaps : [];
+            const narrativeTrainableRaw = Array.isArray(roleFitNarrative?.trainable_in_30_60_days) ? roleFitNarrative.trainable_in_30_60_days : [];
+            const narrativeStrengths = narrativeStrengthsRaw.length
+                ? narrativeStrengthsRaw.map((item) => extractEvidenceSkill(item)).filter(Boolean)
+                : topStrengths.slice(0, 3).filter(Boolean);
+            const narrativeGaps = narrativeGapsRaw.length
+                ? narrativeGapsRaw.map((item) => extractEvidenceSkill(item)).filter(Boolean)
+                : topRisks.slice(0, 3).filter(Boolean);
+            const narrativeTrainable = narrativeTrainableRaw.length
+                ? narrativeTrainableRaw.map((item) => extractEvidenceSkill(item)).filter(Boolean)
+                : displayTriage
+                    .filter((item) => String(item.trainability || '').toLowerCase() !== 'hard_to_train_fast')
+                    .slice(0, 3)
+                    .map((item) => extractEvidenceSkill(item.skill))
+                    .filter(Boolean);
 
-            return (
-                <section className="documents-panel fade-in neo-panel">
-                    <div className="neo-panel-header">
-                        <h3 className="section-title">Recruiter Decision Console</h3>
-                        <p className="neo-muted">HR-oriented view of candidate fit, risk, and interview focus areas based on evidence.</p>
+            const finalRecommendation = roleFitNarrative?.final_recommendation || {};
+            const recommendationDecision = titleCaseToken(finalRecommendation?.decision || hrVerdict.title);
+            const recommendationRationale = finalRecommendation?.rationale || hrVerdict.note;
+
+            const planItemsRaw = Array.isArray(candidateImprovementPlan?.items) ? candidateImprovementPlan.items : [];
+            const candidatePlanItems = planItemsRaw.length ? planItemsRaw.slice(0, 4) : displayTriage.slice(0, 3).map((item, index) => ({
+                skill: item.skill,
+                priority_order: index + 1,
+                what_to_build: `Build one project proving practical experience in ${item.skill} using role-relevant constraints.`,
+                proof_artifacts: ['Project summary', 'Architecture notes', 'Outcome metrics'],
+                expected_match_lift: Math.max(3, 9 - index),
+            }));
+            const planActionTemplates = [
+                (skill) => `Start with one focused project where ${skill} is not optional but central to delivery decisions.`,
+                (skill) => `Use your next practice sprint to apply ${skill} in a real workflow and document what changed because of it.`,
+                (skill) => `Pick a practical scenario and show how you would use ${skill} from planning to final outcome.`,
+                (skill) => `Build confidence in ${skill} by solving one problem end-to-end and capturing your reasoning clearly.`,
+            ];
+            const planCoachTemplates = [
+                (skill) => `In interviews, speak in terms of choices, trade-offs, and outcomes when discussing ${skill}.`,
+                (skill) => `Keep your explanation of ${skill} grounded in what you owned directly, not just team-level work.`,
+                (skill) => `Show evidence of iteration in ${skill}: what failed first, what you changed, and what improved.`,
+                (skill) => `Highlight one measurable impact linked to ${skill} so hiring teams can trust your depth quickly.`,
+            ];
+            const humanizedPlanItems = candidatePlanItems.map((item, idx) => {
+                const skill = item.skill || 'this skill area';
+                const templateLine = planActionTemplates[idx % planActionTemplates.length](skill);
+                const rawBuild = String(item.what_to_build || '').trim();
+                const actionLine = rawBuild && !/Build one project proving practical experience/i.test(rawBuild)
+                    ? `${templateLine} Suggested focus: ${rawBuild}`
+                    : templateLine;
+                const coachLine = planCoachTemplates[idx % planCoachTemplates.length](skill);
+                const artifactLine = Array.isArray(item.proof_artifacts) && item.proof_artifacts.length
+                    ? item.proof_artifacts.join(', ')
+                    : 'Project summary, architecture notes, measurable outcomes';
+                return {
+                    ...item,
+                    actionLine,
+                    coachLine,
+                    artifactLine,
+                };
+            });
+
+            const fitConfidence = clampPercent(Number(evidenceHeader?.fit_confidence ?? decisionConfidence));
+
+            const evidenceDecisionOverview = (
+                <>
+                    <div className="evidence-section-kicker"><span className="evidence-emoji">📊</span>Decision Snapshot</div>
+                    <section className="evidence-command-grid">
+                        {decisionCards.length ? decisionCards.slice(0, 4).map((card, index) => (
+                            <article key={card.id || `decision-${index}`} className={`evidence-command-card ${index === 0 ? 'primary' : index === 1 ? 'risk' : index === 2 ? 'neutral' : 'accent'}`}>
+                                <p className="doc-label">{card.label || 'Decision Metric'}</p>
+                                <p className="doc-value">{clampPercent(card.score)}%</p>
+                                <p className="insight-subtext">{card.explanation || 'Evidence-derived decision metric.'}</p>
+                            </article>
+                        )) : (
+                            <>
+                                <article className="evidence-command-card primary">
+                                    <p className="doc-label">Decision Confidence</p>
+                                    <p className="doc-value">{decisionConfidence}%</p>
+                                    <p className="insight-subtext">Composite score from alignment, evidence quality, and AI coverage.</p>
+                                </article>
+                                <article className="evidence-command-card risk">
+                                    <p className="doc-label">Risk Pressure</p>
+                                    <p className="doc-value">{riskPressure}%</p>
+                                    <p className="insight-subtext">Higher values indicate stronger missing-skill pressure on hiring fit.</p>
+                                </article>
+                                <article className="evidence-command-card neutral">
+                                    <p className="doc-label">Interview Readiness</p>
+                                    <p className="doc-value">{interviewReadiness}%</p>
+                                    <p className="insight-subtext">How prepared this profile is for structured panel interview evaluation.</p>
+                                </article>
+                                <article className="evidence-command-card accent">
+                                    <p className="doc-label">Critical Gap Signals</p>
+                                    <p className="doc-value">{triageCriticalCount} critical | {triageHighImpactCount} high impact</p>
+                                    <p className="insight-subtext">Use this to prioritize technical screening and role-risk decisions.</p>
+                                </article>
+                            </>
+                        )}
+                    </section>
+                </>
+            );
+
+            const pageGoalSection = (
+                <section className="evidence-goal-banner">
+                    <div className="evidence-goal-main">
+                        <p className="doc-label"><span className="evidence-emoji">🎯</span>Page Goal + Fit Label</p>
+                        <h4>{evidenceHeader?.fit_label || hrVerdict.title}</h4>
+                        <p className="insight-subtext">{evidenceHeader?.one_line_summary || hrVerdict.note}</p>
+                    </div>
+                    <div className="evidence-goal-side">
+                        <div className="evidence-fit-score">{fitConfidence}%</div>
+                        <p className="evidence-fit-caption">Fit confidence</p>
+                        <p className="evidence-fit-time">Updated: {aiUpdatedAt}</p>
+                    </div>
+                </section>
+            );
+
+            const evidenceOverviewShell = (
+                <section className="evidence-overview-shell">
+                    {pageGoalSection}
+                    {evidenceDecisionOverview}
+                </section>
+            );
+
+            const aiEnrichmentPanel = (
+                <section className="evidence-ai-panel">
+                    <div className="evidence-ai-header">
+                        <div>
+                            <p className="doc-label"><span className="evidence-emoji">🤖</span>AI Insight Studio</p>
+                            <p className="doc-value">Recruiter-Grade Triage and Semantic Intelligence</p>
+                            <p className="insight-subtext">Curated from AI enrichment and deterministic evidence so decisions remain meaningful and stable.</p>
+                        </div>
+                        <div className={`evidence-ai-status ${aiStatusMeta.tone}`}>
+                            <Circle size={12} fill="currentColor" />
+                            <span>{aiStatusMeta.label}</span>
+                        </div>
                     </div>
 
-                    {!matchEvidence.length ? (
-                        <div className="results-empty">No evidence rows were generated for this run.</div>
-                    ) : (
-                        <>
-                            <section className="evidence-hr-summary-grid">
-                                <article className={`evidence-hr-card verdict ${hrVerdict.tone}`}>
-                                    <p className="doc-label">Hiring Recommendation</p>
-                                    <p className="doc-value">{hrVerdict.title}</p>
-                                    <p className="insight-subtext">{hrVerdict.note}</p>
-                                </article>
-                                <article className="evidence-hr-card">
-                                    <p className="doc-label">Average Evidence Confidence</p>
-                                    <p className="doc-value">{averageConfidence}%</p>
-                                    <p className="insight-subtext">Based on {evidenceRows.length} tracked evidence rows.</p>
-                                </article>
-                                <article className="evidence-hr-card">
-                                    <p className="doc-label">Strength vs Risk</p>
-                                    <p className="doc-value">{exactRows.length} strengths | {missingRows.length} risk gaps</p>
-                                    <p className="insight-subtext">Use this ratio to prioritize shortlist confidence.</p>
-                                </article>
-                            </section>
+                    <div className="evidence-ai-metrics">
+                        <article className="evidence-ai-metric">
+                            <p className="doc-label">Coverage</p>
+                            <p className="doc-value">{aiCoveragePercent}%</p>
+                        </article>
+                        <article className="evidence-ai-metric">
+                            <p className="doc-label">Hallucination Risk</p>
+                            <p className="doc-value">{titleCaseToken(aiRisk)}</p>
+                        </article>
+                        <article className="evidence-ai-metric">
+                            <p className="doc-label">Model</p>
+                            <p className="doc-value">{aiModel}</p>
+                        </article>
+                        <article className="evidence-ai-metric">
+                            <p className="doc-label">Last Updated</p>
+                            <p className="doc-value">{aiUpdatedAt}</p>
+                        </article>
+                    </div>
 
-                            <section className="evidence-hr-playbook">
-                                <article className="document-card evidence-playbook-card">
-                                    <p className="doc-label">Top Strength Signals</p>
-                                    <ul className="evidence-playbook-list">
-                                        {topStrengths.length ? topStrengths.map((skill) => <li key={skill}>{skill}</li>) : <li>No strong strength signals detected.</li>}
-                                    </ul>
-                                </article>
-
-                                <article className="document-card evidence-playbook-card">
-                                    <p className="doc-label">Top Risk Signals</p>
-                                    <ul className="evidence-playbook-list">
-                                        {topRisks.length ? topRisks.map((skill) => <li key={skill}>{skill}</li>) : <li>No high-priority risk gaps detected.</li>}
-                                    </ul>
-                                </article>
-
-                                <article className="document-card evidence-playbook-card">
-                                    <p className="doc-label">Interview Probes (Semantic Matches)</p>
-                                    <ul className="evidence-playbook-list">
-                                        {semanticProbeRows.length ? semanticProbeRows.map((row) => (
-                                            <li key={row.id}>Validate real depth in {row.skill} ({row.confidencePercent}% semantic confidence).</li>
-                                        )) : <li>No semantic-only probes required.</li>}
-                                    </ul>
-                                </article>
-                            </section>
-
-                            <div className="evidence-summary-row">
-                                <p className="insight-subtext">Evidence grouped for recruiter action: ready-to-hire signals, contextual match checks, and concern items.</p>
+                    <div className="evidence-ai-deep-grid">
+                        <article className="document-card evidence-ai-card">
+                            <p className="doc-label"><span className="evidence-emoji">🚨</span>Must-Have Gap Prioritization</p>
+                            <div className="evidence-ai-chip-list">
+                                {displayTriage.length ? displayTriage.map((item, index) => {
+                                    const priority = titleCaseToken(item.priority || 'important');
+                                    const impact = titleCaseToken(item.impact || 'medium');
+                                    const trainability = titleCaseToken(item.trainability || 'trainable_mid_term');
+                                    const conf = clampPercent((Number(item.confidence || 0)) * 100);
+                                    return (
+                                        <article className="evidence-ai-chip-card" key={`${item.skill || 'triage'}-${index}`}>
+                                            <div className="evidence-ai-chip-top">
+                                                <h5>{item.skill || 'Unspecified skill'}</h5>
+                                                <span className="evidence-ai-chip-confidence">{conf}%</span>
+                                            </div>
+                                            <div className="evidence-ai-chip-tags">
+                                                <span>{priority}</span>
+                                                <span>{impact} impact</span>
+                                                <span>{trainability}</span>
+                                            </div>
+                                            <p>{item.reason || 'No triage reason provided.'}</p>
+                                        </article>
+                                    );
+                                }) : <p className="insight-subtext">No triage guidance available for this run.</p>}
                             </div>
+                        </article>
 
-                            <section className="evidence-lane-switch">
-                                {Object.values(laneMap).map((lane) => (
-                                    <button
-                                        key={lane.key}
-                                        className={`evidence-lane-btn ${evidenceView === lane.key ? 'active' : ''}`}
-                                        onClick={() => setEvidenceView(lane.key)}
-                                    >
-                                        <span>{lane.label}</span>
-                                        <strong>{lane.rows.length}</strong>
-                                    </button>
-                                ))}
-                            </section>
 
-                            <section className="evidence-lanes-grid single-view">
-                                <article className="evidence-lane">
-                                    <div className="evidence-lane-header">
-                                        <h4>{activeLane.label}</h4>
-                                        <span>{activeLane.rows.length}</span>
+
+                        <article className="document-card evidence-ai-card">
+                            <p className="doc-label"><span className="evidence-emoji">🧠</span>Term Intelligence</p>
+                            <div className="evidence-mapping-list">
+                                {aiTopMappings.length ? aiTopMappings.map((item, index) => (
+                                    <div className="evidence-mapping-row" key={`${item.source_term || 'mapping'}-${index}`}>
+                                        <span className="mapping-source">{item.source_term || 'Unknown'}</span>
+                                        <span className="mapping-arrow">→</span>
+                                        <span className="mapping-target">{item.normalized_term || 'Unknown'}</span>
+                                        <span className="mapping-confidence">{clampPercent((Number(item.confidence || 0)) * 100)}%</span>
                                     </div>
-                                    <div className="evidence-lane-body">
-                                        {activeLane.rows.slice(0, 12).map((row) => (
-                                            <article key={row.id} className={`evidence-item-card ${activeLane.cardClass}`}>
-                                                <div className="evidence-item-top">
-                                                    <span className={`evidence-skill-chip evidence-skill-${row.matchType}`}>{row.skill}</span>
-                                                    <span className={`evidence-pill evidence-${row.matchType}`}>{row.confidencePercent}%</span>
-                                                </div>
-                                                <p className="evidence-item-caption">{activeLane.caption}</p>
-                                                <div className="evidence-context-stack">
-                                                    <div className="evidence-context-block">
-                                                        <p className="evidence-context-label">JD Context</p>
-                                                        <div className="evidence-context-cell">{buildInlineHighlights(row.jdSnippet, row.highlightTerms, activeLane.tone)}</div>
-                                                    </div>
-                                                    <div className="evidence-context-block">
-                                                        <p className="evidence-context-label">Resume Context</p>
-                                                        <div className="evidence-context-cell">{buildInlineHighlights(row.resumeSnippet, row.highlightTerms, activeLane.tone)}</div>
-                                                    </div>
-                                                    {row.isSemantic && row.exactWordMissingInResume ? (
-                                                        <p className="evidence-semantic-note">Matched semantically at {row.confidencePercent}% even though exact terminology is absent.</p>
-                                                    ) : null}
-                                                </div>
-                                            </article>
-                                        ))}
-                                        {!activeLane.rows.length ? (
-                                            <div className="results-empty">No items in this lane for the current run.</div>
+                                )) : <p className="insight-subtext">No semantic normalization mappings available.</p>}
+                            </div>
+                        </article>
+
+                    </div>
+                </section>
+            );
+
+            return (
+                <section className="documents-panel evidence-layer-panel fade-in neo-panel">
+                    <section className="evidence-tab-shell">
+                        <div className="evidence-tab-nav" role="tablist" aria-label="Evidence navigation tabs">
+                            <button
+                                role="tab"
+                                aria-selected={evidenceSectionTab === 'overview'}
+                                className={`evidence-tab-btn ${evidenceSectionTab === 'overview' ? 'active' : ''}`}
+                                onClick={() => setEvidenceSectionTab('overview')}
+                            >
+                                Basic Evidence Overview
+                            </button>
+                            <button
+                                role="tab"
+                                aria-selected={evidenceSectionTab === 'ai'}
+                                className={`evidence-tab-btn ${evidenceSectionTab === 'ai' ? 'active' : ''}`}
+                                onClick={() => setEvidenceSectionTab('ai')}
+                            >
+                                AI Insight Studio
+                            </button>
+                            <button
+                                role="tab"
+                                aria-selected={evidenceSectionTab === 'viewmode'}
+                                className={`evidence-tab-btn ${evidenceSectionTab === 'viewmode' ? 'active' : ''}`}
+                                onClick={() => setEvidenceSectionTab('viewmode')}
+                            >
+                                View Mode
+                            </button>
+                        </div>
+                    </section>
+
+                    {evidenceSectionTab === 'overview' && (
+                        <>
+                            {evidenceOverviewShell}
+
+                            <section className="evidence-narrative-grid">
+                                <article className="document-card evidence-narrative-card">
+                                    <p className="doc-label"><span className="evidence-emoji">📝</span>Role-Fit Narrative</p>
+                                    <div className="evidence-narrative-columns">
+                                        <div style={{ background: 'linear-gradient(135deg, #eef1ff 0%, #f0f2ff 100%)', border: '1px solid #c7d2ff', borderRadius: '12px', padding: '0.7rem 0.8rem' }}>
+                                            <h5 style={{ color: '#5f67e8' }}>Strengths</h5>
+                                            <ul className="evidence-playbook-list">
+                                                {narrativeStrengths.length ? narrativeStrengths.map((line, idx) => <li key={`strength-${idx}`}>{line}</li>) : <li>No clear strengths identified.</li>}
+                                            </ul>
+                                        </div>
+                                        <div style={{ background: 'linear-gradient(135deg, #fff1f5 0%, #ffe4e6 100%)', border: '1px solid #fb7185', borderRadius: '12px', padding: '0.7rem 0.8rem' }}>
+                                            <h5 style={{ color: '#e11d48' }}>Blocking Gaps</h5>
+                                            <ul className="evidence-playbook-list">
+                                                {narrativeGaps.length ? narrativeGaps.map((line, idx) => <li key={`gap-${idx}`}>{line}</li>) : <li>No blocking gaps detected.</li>}
+                                            </ul>
+                                        </div>
+                                        {evidencePersona === 'hr' ? (
+                                            <div style={{ background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', border: '1px solid #ddd6fe', borderRadius: '12px', padding: '0.7rem 0.8rem' }}>
+                                                <h5 style={{ color: '#7c3aed' }}>Trainable in 30-60 Days</h5>
+                                                <ul className="evidence-playbook-list">
+                                                    {narrativeTrainable.length ? narrativeTrainable.map((line, idx) => <li key={`train-${idx}`}>{line}</li>) : <li>No trainable gap recommendations available.</li>}
+                                                </ul>
+                                            </div>
                                         ) : null}
                                     </div>
+                                    <div className="evidence-recommendation-row">
+                                        <span className="evidence-recommendation-chip">{recommendationDecision}</span>
+                                        <p>{recommendationRationale}</p>
+                                    </div>
                                 </article>
                             </section>
+                        </>
+                    )}
+
+                    {evidenceSectionTab === 'ai' && (
+                        <>
+                            {aiEnrichmentPanel}
+                        </>
+                    )}
+
+                    {evidenceSectionTab === 'viewmode' && (
+                        <>
+                            <div className="evidence-viewmode-shell">
+                                <div className="evidence-persona-selector">
+                                    <p className="evidence-viewmode-title">View Mode</p>
+                                    <div className="evidence-viewmode-buttons">
+                                        <button
+                                            onClick={() => setEvidencePersona('hr')}
+                                            className={`evidence-viewmode-btn ${evidencePersona === 'hr' ? 'active' : ''}`}
+                                        >
+                                            HR View
+                                        </button>
+                                        <button
+                                            onClick={() => setEvidencePersona('candidate')}
+                                            className={`evidence-viewmode-btn ${evidencePersona === 'candidate' ? 'active' : ''}`}
+                                        >
+                                            Candidate View
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {evidencePersona === 'hr' ? (
+                                <>
+                                    <div className="evidence-summary-row">
+                                        <p className="insight-subtext"><span className="evidence-emoji">🎯</span>Executive Decision Summary - Hiring Readiness, Skills Gap Analysis & Risk Profile</p>
+                                    </div>
+
+                                    {/* ===== SECTION 1: EXECUTIVE RECOMMENDATION ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">✅</span>Hiring Recommendation</p>
+                                            <div className="evidence-narrative-columns">
+                                                <div style={{ background: 'linear-gradient(135deg, #eef1ff 0%, #f0f2ff 100%)', border: '1px solid #c7d2ff', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.5rem', color: '#5f67e8' }}>Decision</h5>
+                                                    <p className="doc-value" style={{ marginTop: '0.2rem', fontSize: '1.1rem', fontWeight: '600' }}>
+                                                        {hrExecutiveRec?.decision ? 
+                                                            (hrExecutiveRec.decision === 'proceed' ? '✅ Proceed' :
+                                                             hrExecutiveRec.decision === 'interview_with_focus' ? '🔍 Interview with Focus' :
+                                                             hrExecutiveRec.decision === 'interview_with_conditions' ? '⚠️ Interview w/ Conditions' :
+                                                             '🚫 High Risk')
+                                                            : 'N/A'}
+                                                    </p>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.3rem', fontStyle: 'italic' }}>
+                                                        {hrExecutiveRec?.one_line_summary || 'No summary available'}
+                                                    </p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', border: '1px solid #ddd6fe', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.5rem', color: '#7c3aed' }}>Decision Confidence</h5>
+                                                    <p className="doc-value" style={{ marginTop: '0.2rem', fontSize: '1.3rem', fontWeight: '700' }}>
+                                                        {hrExecutiveRec?.decision_confidence || 0}%
+                                                    </p>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.3rem' }}>
+                                                        High confidence in this recommendation
+                                                    </p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #fff1f5 0%, #ffe4e6 100%)', border: '1px solid #fb7185', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.5rem', color: '#e11d48' }}>Key Drivers</h5>
+                                                    <ul className="evidence-playbook-list" style={{ marginTop: '0.5rem', fontSize: '0.95rem' }}>
+                                                        <li>{hrExecutiveRec?.key_drivers?.strengths || 'No strengths identified'}</li>
+                                                        <li>{hrExecutiveRec?.key_drivers?.concern || 'No concerns identified'}</li>
+                                                        <li>{hrExecutiveRec?.key_drivers?.trainable || 'No trainable gaps'}</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </section>
+
+                                    {/* ===== SECTION 2: SKILLS REQUIREMENT ANALYSIS ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">🎓</span>Skills Requirement Breakdown</p>
+                                            <div className="evidence-narrative-columns">
+                                                {/* Critical Must-Have */}
+                                                <div style={{ background: 'linear-gradient(135deg, #fff1f5 0%, #ffe4e6 100%)', border: '1px solid #fb7185', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.4rem', color: '#e11d48' }}>Critical Must-Have</h5>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.25rem', fontSize: '0.9rem' }}>
+                                                        {hrSkillsAnalysis?.critical_must_have?.summary || 'No critical skills defined'}
+                                                    </p>
+                                                    <ul style={{ marginTop: '0.4rem', paddingLeft: '1.2rem', fontSize: '0.95rem' }}>
+                                                        {hrSkillsAnalysis?.critical_must_have?.gaps?.length > 0 ? (
+                                                            <>
+                                                                <li style={{ color: '#c7254e', fontWeight: '600' }}>❌ Gaps: {hrSkillsAnalysis.critical_must_have.gaps.join(', ')}</li>
+                                                            </>
+                                                        ) : (
+                                                            <li style={{ color: '#28a745', fontWeight: '600' }}>✅ All matched</li>
+                                                        )}
+                                                    </ul>
+                                                </div>
+
+                                                {/* Important Skills */}
+                                                <div style={{ background: 'linear-gradient(135deg, #fdf8f0 0%, #fef3c7 100%)', border: '1px solid #fcd34d', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.4rem', color: '#b45309' }}>Important Preferred</h5>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.25rem', fontSize: '0.9rem' }}>
+                                                        {hrSkillsAnalysis?.important_strongly_preferred?.summary || 'No skills summary'}
+                                                    </p>
+                                                    <ul style={{ marginTop: '0.4rem', paddingLeft: '1.2rem', fontSize: '0.95rem' }}>
+                                                        {hrSkillsAnalysis?.important_strongly_preferred?.gaps?.length > 0 ? (
+                                                            <li style={{ color: '#856404' }}>⚠️ Gaps: {hrSkillsAnalysis.important_strongly_preferred.gaps.slice(0, 2).join(', ')}</li>
+                                                        ) : (
+                                                            <li style={{ color: '#28a745', fontWeight: '600' }}>✅ All matched</li>
+                                                        )}
+                                                        <li style={{ color: '#666', fontSize: '0.85rem' }}>Impact: Performance boost with these skills</li>
+                                                    </ul>
+                                                </div>
+
+                                                {/* Nice-to-Have */}
+                                                <div style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid #6ee7b7', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.4rem', color: '#059669' }}>Nice-to-Have</h5>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.25rem', fontSize: '0.9rem' }}>
+                                                        Differentiator skills that showcase depth
+                                                    </p>
+                                                    <ul style={{ marginTop: '0.4rem', paddingLeft: '1.2rem', fontSize: '0.95rem' }}>
+                                                        <li style={{ color: '#059669', fontWeight: '600' }}>✅ {hrSkillsAnalysis?.nice_to_have?.matched?.length || 0} additional skills</li>
+                                                        <li style={{ color: '#666', fontSize: '0.85rem' }}>Impact: Growth potential and differentiation</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </section>
+
+                                    {/* ===== SECTION 3: RISK & MITIGATION ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">⚠️</span>Risk Assessment & Mitigation</p>
+                                            <div style={{ padding: '0rem' }}>
+                                                {/* Risk Level Summary */}
+                                                <div style={{ 
+                                                    background: hrRiskAssessment?.overall_risk_level === 'high' ? 'linear-gradient(135deg, #fff1f5 0%, #ffe4e6 100%)' : hrRiskAssessment?.overall_risk_level === 'medium' ? 'linear-gradient(135deg, #fdf8f0 0%, #fef3c7 100%)' : 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                                                    border: hrRiskAssessment?.overall_risk_level === 'high' ? '1px solid #fb7185' : hrRiskAssessment?.overall_risk_level === 'medium' ? '1px solid #fcd34d' : '1px solid #6ee7b7',
+                                                    borderRadius: '12px',
+                                                    padding: '0.8rem 1rem',
+                                                    marginBottom: '0.8rem'
+                                                }}>
+                                                    <h5 style={{ marginBottom: '0.3rem' }}>Risk Level</h5>
+                                                    <p className="doc-value" style={{ fontSize: '1.1rem', fontWeight: '600', marginTop: '0.2rem' }}>
+                                                        {hrRiskAssessment?.overall_risk_level === 'high' ? '🔴 High Risk' :
+                                                         hrRiskAssessment?.overall_risk_level === 'medium' ? '🟡 Medium Risk' :
+                                                         '🟢 Low Risk'}
+                                                    </p>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.3rem', fontSize: '0.9rem' }}>
+                                                        Mitigation Timeline: {hrRiskAssessment?.mitigation_timeline?.replace(/_/g, ' ') || 'N/A'}
+                                                    </p>
+                                                </div>
+
+                                                {/* Risk Factors */}
+                                                {hrRiskAssessment?.risk_factors?.length > 0 ? (
+                                                    <div style={{ padding: '0.5rem 0' }}>
+                                                        <h5 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Key Risk Factors</h5>
+                                                        <div className="evidence-improvement-list">
+                                                            {hrRiskAssessment.risk_factors.slice(0, 3).map((risk, idx) => (
+                                                                <div key={`risk-${idx}`} style={{ background: 'linear-gradient(135deg, #f9f6ff 0%, #ede9fe 100%)', border: '1px solid #ddd6fe', borderRadius: '8px', padding: '0.6rem 0.8rem', marginBottom: '0.6rem' }}>
+                                                                    <p style={{ fontWeight: '600', marginBottom: '0.3rem', fontSize: '0.95rem' }}>
+                                                                        {idx + 1}. {risk?.factor || 'Risk factor'}
+                                                                    </p>
+                                                                    <ul style={{ paddingLeft: '1.2rem', fontSize: '0.9rem', margin: '0' }}>
+                                                                        <li><strong>Severity:</strong> {risk?.severity || 'medium'}</li>
+                                                                        <li><strong>Mitigation:</strong> {risk?.mitigation_strategy?.substring(0, 80) + '...' || 'N/A'}</li>
+                                                                        <li><strong>Timeline:</strong> {risk?.trainability?.replace(/_/g, ' ') || 'N/A'}</li>
+                                                                    </ul>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <p className="insight-subtext">✅ No significant risk factors identified.</p>
+                                                )}
+                                            </div>
+                                        </article>
+                                    </section>
+
+                                    {/* ===== SECTION 4: QUICK FACTS & HIRING READINESS ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">📊</span>Quick Facts</p>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                                                <div style={{ background: 'linear-gradient(135deg, #eef1ff 0%, #f0f2ff 100%)', padding: '0.7rem', borderRadius: '8px', border: '1px solid #c7d2ff' }}>
+                                                    <p className="insight-subtext" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>Exact Matches</p>
+                                                    <p className="doc-value" style={{ fontSize: '1.4rem', fontWeight: '700', color: '#5f67e8' }}>{hrQuickFacts?.exact_skill_matches || 0}</p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #fff1f5 0%, #ffe4e6 100%)', padding: '0.7rem', borderRadius: '8px', border: '1px solid #fb7185' }}>
+                                                    <p className="insight-subtext" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>Skill Gaps</p>
+                                                    <p className="doc-value" style={{ fontSize: '1.4rem', fontWeight: '700', color: '#e11d48' }}>{hrQuickFacts?.skill_gaps || 0}</p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #ecf7fc 0%, #cffafe 100%)', padding: '0.7rem', borderRadius: '8px', border: '1px solid #a5f3fc' }}>
+                                                    <p className="insight-subtext" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>Overall Coverage</p>
+                                                    <p className="doc-value" style={{ fontSize: '1.4rem', fontWeight: '700', color: '#06b6d4' }}>{hrQuickFacts?.overall_coverage || '0%'}</p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', padding: '0.7rem', borderRadius: '8px', border: '1px solid #6ee7b7' }}>
+                                                    <p className="insight-subtext" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>Role Alignment</p>
+                                                    <p className="doc-value" style={{ fontSize: '1.4rem', fontWeight: '700', color: '#059669' }}>{hrQuickFacts?.role_alignment_score || 0}%</p>
+                                                </div>
+                                            </div>
+                                        </article>
+
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">🎤</span>Interview Readiness</p>
+                                            <div style={{ padding: '0.5rem 0' }}>
+                                                <div style={{ background: 'linear-gradient(135deg, #eef1ff 0%, #f0f2ff 100%)', border: '1px solid #c7d2ff', borderRadius: '8px', padding: '0.8rem', marginBottom: '0.6rem' }}>
+                                                    <p style={{ fontWeight: '600', marginBottom: '0.3rem', color: '#5f67e8' }}>Can Conduct Interview</p>
+                                                    <p className="doc-value" style={{ fontSize: '1.1rem' }}>
+                                                        {hrHiringReadiness?.can_conduct_interview ? '✅ Yes' : '❌ No'}
+                                                    </p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #fdf8f0 0%, #fef3c7 100%)', border: '1px solid #fcd34d', borderRadius: '8px', padding: '0.8rem', marginBottom: '0.6rem' }}>
+                                                    <p style={{ fontWeight: '600', marginBottom: '0.3rem', color: '#b45309' }}>Onboarding Readiness</p>
+                                                    <p className="doc-value" style={{ fontSize: '1.1rem' }}>
+                                                        {hrHiringReadiness?.onboarding_readiness === 'high' ? '✅ High' :
+                                                         hrHiringReadiness?.onboarding_readiness === 'medium' ? '⚠️ Medium' :
+                                                         '🔴 Low'}
+                                                    </p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid #6ee7b7', borderRadius: '8px', padding: '0.8rem' }}>
+                                                    <p style={{ fontWeight: '600', marginBottom: '0.3rem', color: '#059669' }}>Pre-Interview Focus</p>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.3rem', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                                                        {hrHiringReadiness?.pre_interview_validation || 'No critical validations needed'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </section>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="evidence-summary-row">
+                                        <p className="insight-subtext"><span className="evidence-emoji">🚀</span>Your Career Development Path - Role Readiness and Gap Closure Strategy</p>
+                                    </div>
+
+                                    {/* ===== SECTION 1: ROLE-FIT ASSESSMENT ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">📊</span>Your Role Readiness</p>
+                                            <div className="evidence-narrative-columns">
+                                                <div style={{ background: 'linear-gradient(135deg, #eef1ff 0%, #f0f2ff 100%)', border: '1px solid #c7d2ff', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.5rem', color: '#5f67e8' }}>Readiness Score</h5>
+                                                    <p className="doc-value" style={{ marginTop: '0.2rem', fontSize: '1.6rem', fontWeight: '700', color: '#5f67e8' }}>
+                                                        {candidateRoleFit?.readiness_score || 0}%
+                                                    </p>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.3rem', fontSize: '0.9rem' }}>
+                                                        {candidateRoleFit?.interpretation || 'Assessment not available'}
+                                                    </p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #fdf8f0 0%, #fef3c7 100%)', border: '1px solid #fcd34d', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.5rem', color: '#b45309' }}>Interview Likelihood</h5>
+                                                    <p className="doc-value" style={{ marginTop: '0.2rem', fontSize: '1.2rem', fontWeight: '600', color: '#b45309' }}>
+                                                        {candidateRoleFit?.interview_likelihood === 'Very likely' ? '✨ Very Likely' :
+                                                         candidateRoleFit?.interview_likelihood === 'Likely' ? '👍 Likely' :
+                                                         candidateRoleFit?.interview_likelihood === 'Possible' ? '⚠️ Possible' :
+                                                         '🤔 Unlikely'}
+                                                    </p>
+                                                    <p className="insight-subtext" style={{ marginTop: '0.3rem', fontSize: '0.9rem' }}>
+                                                        {candidateRoleFit?.can_interview ? 'You can likely secure an interview' : 'Consider upskilling before applying'}
+                                                    </p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #ecf7fc 0%, #cffafe 100%)', border: '1px solid #a5f3fc', borderRadius: '12px', padding: '0.9rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.5rem', color: '#06b6d4' }}>Skill Matches</h5>
+                                                    <ul style={{ marginTop: '0.5rem', paddingLeft: '1.2rem', fontSize: '0.95rem', margin: '0' }}>
+                                                        <li style={{ color: '#059669' }}>✅ {candidateRoleFit?.skills_breakdown?.matched_exact?.count || 0} exact matches</li>
+                                                        <li style={{ color: '#06b6d4' }}>🟢 {candidateRoleFit?.skills_breakdown?.matched_semantic?.count || 0} semantic matches</li>
+                                                        <li style={{ color: '#b45309' }}>🟡 {candidateRoleFit?.skills_breakdown?.partial_emerging?.count || 0} emerging skills</li>
+                                                        <li style={{ color: '#e11d48' }}>🔴 {candidateRoleFit?.skills_breakdown?.critical_gaps?.count || 0} critical gaps</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </section>
+
+                                    {/* ===== SECTION 2: EVIDENCE STRENGTH (SIMPLIFIED) ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">🔍</span>Interview Talking Points</p>
+                                            <div style={{ marginTop: '0.35rem', padding: '0.8rem', background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', borderRadius: '8px', border: '1px solid #ddd6fe' }}>
+                                                <div style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
+                                                    <p style={{ marginBottom: '0.4rem', color: '#28a745', fontWeight: '600' }}>
+                                                        ✅ Discuss in depth: {candidateEvidence?.interview_talking_points?.discuss_in_depth?.slice(0, 3).join(', ') || 'Your core strengths'}
+                                                    </p>
+                                                    <p style={{ marginBottom: '0.4rem', color: '#856404', fontWeight: '600' }}>
+                                                        🟡 Can briefly mention: {candidateEvidence?.interview_talking_points?.can_briefly_mention?.slice(0, 2).join(', ') || 'Related skills'}
+                                                    </p>
+                                                    <p style={{ color: '#c7254e', fontWeight: '600' }}>
+                                                        ❌ Avoid claiming: {candidateEvidence?.interview_talking_points?.avoid_claiming?.slice(0, 2).join(', ') || 'Unproven skills'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </section>
+
+                                    {/* ===== SECTION 3: GAP CLOSURE ROADMAP ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">🛣️</span>Gap Closure Learning Roadmap</p>
+                                            <div className="evidence-improvement-list">
+                                                {Array.isArray(candidateGapRoadmap) && candidateGapRoadmap.length > 0 ? (
+                                                    candidateGapRoadmap.slice(0, 4).map((gap, idx) => (
+                                                        <article className="evidence-improvement-item" key={`gap-${idx}`} style={{ background: gap.priority === 'CRITICAL' ? 'linear-gradient(135deg, #fff1f5 0%, #ffe4e6 100%)' : 'linear-gradient(135deg, #fdf8f0 0%, #fef3c7 100%)', borderLeft: `4px solid ${gap.priority === 'CRITICAL' ? '#e11d48' : '#f59e0b'}` }}>
+                                                            <h5 style={{ marginBottom: '0.4rem' }}>
+                                                                {gap.priority === 'CRITICAL' ? '🔴' : '🟡'} {gap.skill}
+                                                                <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', fontWeight: '400', color: '#666' }}>
+                                                                    {gap.difficulty}
+                                                                </span>
+                                                            </h5>
+                                                            <p style={{ marginBottom: '0.3rem', fontSize: '0.9rem' }}>
+                                                                <strong>Timeline:</strong> {gap.weeks_to_proficiency} weeks ({gap.realistic_timeline})
+                                                            </p>
+                                                            <p style={{ marginBottom: '0.3rem', fontSize: '0.9rem' }}>
+                                                                <strong>Why needed:</strong> {gap.why_needed}
+                                                            </p>
+                                                            <div style={{ marginTop: '0.4rem', paddingTop: '0.4rem', borderTop: '1px solid #e0e0e0' }}>
+                                                                <p style={{ fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.2rem' }}>Learning Path:</p>
+                                                                <ul style={{ paddingLeft: '1.2rem', fontSize: '0.85rem', margin: '0.2rem 0' }}>
+                                                                    {gap.learning_phases && gap.learning_phases.slice(0, 3).map((phase, pidx) => (
+                                                                        <li key={`phase-${pidx}`}>{phase}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                            <p style={{ marginTop: '0.4rem', fontSize: '0.85rem', color: '#059669', fontWeight: '600' }}>
+                                                                Evidence: {gap.evidence_artifact}
+                                                            </p>
+                                                            <p style={{ marginTop: '0.3rem', fontSize: '0.85rem', color: '#666', fontStyle: 'italic' }}>
+                                                                Interview: {gap.interview_signal}
+                                                            </p>
+                                                            <p style={{ marginTop: '0.3rem', fontSize: '0.85rem' }}>
+                                                                <strong>Match boost:</strong> {gap.expected_boost}
+                                                            </p>
+                                                        </article>
+                                                    ))
+                                                ) : (
+                                                    <p className="insight-subtext">No critical gaps identified. You're well-prepared!</p>
+                                                )}
+                                            </div>
+                                        </article>
+                                    </section>
+
+                                    {/* ===== SECTION 5: CAREER INSIGHTS ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card">
+                                            <p className="doc-label"><span className="evidence-emoji">🎯</span>Career Insights & Growth Path</p>
+                                            <div className="evidence-narrative-columns">
+                                                <div style={{ background: 'linear-gradient(135deg, #ecf7fc 0%, #cffafe 100%)', border: '1px solid #a5f3fc', borderRadius: '12px', padding: '0.8rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.3rem', color: '#06b6d4' }}>This Role Fit</h5>
+                                                    <p style={{ fontSize: '0.9rem', margin: '0.3rem 0' }}>
+                                                        <strong>Level:</strong> {candidateCareer?.this_role?.level_match || 'Good Match'}
+                                                    </p>
+                                                    <p style={{ fontSize: '0.9rem', margin: '0.3rem 0' }}>
+                                                        <strong>Day 1:</strong> {candidateCareer?.this_role?.day_one_impact || 'Will need ramp-up'}
+                                                    </p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid #6ee7b7', borderRadius: '12px', padding: '0.8rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.3rem', color: '#059669' }}>Career Path</h5>
+                                                    <p style={{ fontSize: '0.9rem', margin: '0.3rem 0' }}>
+                                                        <strong>Next Level:</strong> {candidateCareer?.career_path?.next_level_opportunity || 'Senior Engineer'}
+                                                    </p>
+                                                    <p style={{ fontSize: '0.9rem', margin: '0.3rem 0' }}>
+                                                        <strong>Timeline:</strong> {candidateCareer?.career_path?.timeline_to_next_level || '3-4 years'}
+                                                    </p>
+                                                </div>
+                                                <div style={{ background: 'linear-gradient(135deg, #fdf8f0 0%, #fef3c7 100%)', border: '1px solid #fcd34d', borderRadius: '12px', padding: '0.8rem 1rem' }}>
+                                                    <h5 style={{ marginBottom: '0.3rem', color: '#b45309' }}>Long-Term Value</h5>
+                                                    <p style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
+                                                        {candidateCareer?.long_term_value || 'This role provides valuable skills for future growth'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </section>
+
+                                    {/* ===== RECOMMENDATION ===== */}
+                                    <section className="evidence-narrative-grid">
+                                        <article className="document-card evidence-narrative-card" style={{ background: '#f0fdf4', border: '2px solid #28a745' }}>
+                                            <p className="doc-label"><span className="evidence-emoji">💡</span>Recommended Next Step</p>
+                                            <h4 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', color: '#28a745', fontWeight: '700' }}>
+                                                {candidateGuidance?.recommended_action || 'Follow your action plan'}
+                                            </h4>
+                                            <p style={{ fontSize: '0.95rem', lineHeight: '1.6', margin: '0.5rem 0' }}>
+                                                {candidateGuidance?.primary_message || 'Work on closing key gaps to strengthen your candidacy'}
+                                            </p>
+                                        </article>
+                                    </section>
+                                </>
+                            )}
+
+                            {!matchEvidence.length ? (
+                                <div className="results-empty">No evidence rows were generated for this run.</div>
+                            ) : null}
                         </>
                     )}
                 </section>
@@ -668,59 +1351,20 @@ function App() {
 
         if (activePage === 'documents') {
             return (
-                <section className="documents-panel fade-in neo-panel">
-                    <div className="neo-panel-header">
-                        <h3 className="section-title">Document Center</h3>
-                        <p className="neo-muted">All sources and metadata for the active assessment.</p>
-                    </div>
-                    <div className="documents-grid">
-                        <div className="document-card">
-                            <div className="doc-label-row">
-                                <Briefcase size={14} className="doc-icon-badge" />
-                                <p className="doc-label">Job Description Source</p>
-                            </div>
-                            <p className="doc-value">{jdFile ? jdFile.name : jdText.trim() ? 'Manual Text Input' : 'Not attached'}</p>
-                        </div>
-                        <div className="document-card">
-                            <div className="doc-label-row">
-                                <UserRound size={14} className="doc-icon-badge" />
-                                <p className="doc-label">Resume Source</p>
-                            </div>
-                            <p className="doc-value">{resume ? resume.name : 'Not attached'}</p>
-                        </div>
-                    </div>
-
+                <section className="documents-panel documents-preview-only fade-in neo-panel">
                     {extractedData ? (
                         <>
-                            <div className="documents-section-divider">
-                                <span>Parsed Content Preview</span>
-                            </div>
-
-                            <div className="documents-highlight-toolbar">
-                                <button
-                                    className={`highlight-toggle-btn ${isHighlightEnabled ? 'active' : ''}`}
-                                    onClick={() => setIsHighlightEnabled((prev) => !prev)}
-                                >
-                                    {isHighlightEnabled ? 'Remove Highlight' : 'Highlighter'}
-                                </button>
-
-                                <div className="highlight-legend">
-                                    <span className="legend-pill exact">Exact Match</span>
-                                    <span className="legend-pill partial">Partial Match</span>
-                                    <span className="legend-pill missing">Missing Skills</span>
-                                    <span className="legend-pill additional">Additional Resume Skills</span>
-                                </div>
-                            </div>
-
                             <section className="documents-text-compare">
                                 <article className="document-card text-preview-card">
-                                    <div className="text-preview-header">
+                                    <div className="text-preview-header" style={{ alignItems: 'flex-start' }}>
                                         <div>
                                             <p className="doc-label">Parsed Job Description</p>
                                             <p className="doc-value">{extractedData.jd_filename || 'Manual Input'}</p>
-                                            <p className="text-metrics">{jdFile ? formatFileSize(jdFile.size) : jdText.trim() ? 'Manual text input' : 'Size N/A'}</p>
                                         </div>
-                                        <p className="text-metrics">{getWordCount(extractedData.job_description_text)} words</p>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <p className="text-metrics" style={{ fontWeight: '700', fontSize: '0.86rem', color: '#1e293b' }}>{getWordCount(extractedData.job_description_text)} words</p>
+                                            <p className="text-metrics" style={{ marginTop: '0.15rem', fontSize: '0.74rem' }}>{jdFile ? formatFileSize(jdFile.size) : jdText.trim() ? 'Manual input' : 'Size N/A'}</p>
+                                        </div>
                                     </div>
                                     <div className="parsed-preview-body">
                                         {buildHighlightedPreview(extractedData.job_description_text, jdHighlightEntries)}
@@ -729,13 +1373,15 @@ function App() {
                                 </article>
 
                                 <article className="document-card text-preview-card">
-                                    <div className="text-preview-header">
+                                    <div className="text-preview-header" style={{ alignItems: 'flex-start' }}>
                                         <div>
                                             <p className="doc-label">Parsed Resume Content</p>
                                             <p className="doc-value">{extractedData.resume_filename || 'Uploaded File'}</p>
-                                            <p className="text-metrics">{resume ? formatFileSize(resume.size) : 'Size N/A'}</p>
                                         </div>
-                                        <p className="text-metrics">{getWordCount(extractedData.resume_text)} words</p>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <p className="text-metrics" style={{ fontWeight: '700', fontSize: '0.86rem', color: '#1e293b' }}>{getWordCount(extractedData.resume_text)} words</p>
+                                            <p className="text-metrics" style={{ marginTop: '0.15rem', fontSize: '0.74rem' }}>{resume ? formatFileSize(resume.size) : 'Size N/A'}</p>
+                                        </div>
                                     </div>
                                     <div className="parsed-preview-body">
                                         {buildHighlightedPreview(extractedData.resume_text, resumeHighlightEntries)}
@@ -749,6 +1395,46 @@ function App() {
                             Run an assessment to unlock semantic insights, skill-gap summary, and side-by-side parsed content previews.
                         </div>
                     )}
+                </section>
+            );
+        }
+
+        if (activePage === 'multi-resume') {
+            return <MultiResumeAnalysis domainOptions={domainOptions} />;
+        }
+
+        if (activePage === 'skill-matching') {
+            if (!extractedData) {
+                return (
+                    <section className="documents-panel fade-in neo-panel">
+                        <div className="results-empty">
+                            Run an assessment to unlock BERT and Spacy skill matching views.
+                        </div>
+                    </section>
+                );
+            }
+
+            return (
+                <section className="documents-panel fade-in neo-panel" style={{ padding: '0.5rem' }}>
+                    <SkillMatchingModal isEmbedded={true} data={extractedData} />
+                </section>
+            );
+        }
+
+        if (activePage === 'visuals') {
+            if (!extractedData) {
+                return (
+                    <section className="documents-panel fade-in neo-panel">
+                        <div className="results-empty">
+                            Run an assessment to unlock the visual analytics dashboard.
+                        </div>
+                    </section>
+                );
+            }
+
+            return (
+                <section className="documents-panel fade-in neo-panel" style={{ padding: '0.5rem' }}>
+                    <VisualizationModal isEmbedded={true} data={extractedData} />
                 </section>
             );
         }
@@ -935,18 +1621,6 @@ function App() {
 
                     {extractedData && (
                         <div className="sidebar-action-stack">
-                            <button className="sidebar-action-btn" onClick={() => setIsVizModalOpen(true)}>
-                                <BarChart3 size={16} />
-                                <span>Visuals</span>
-                            </button>
-                            <button className="sidebar-action-btn" onClick={() => setIsBertModalOpen(true)}>
-                                <Layers3 size={16} />
-                                <span>Semantic</span>
-                            </button>
-                            <button className="sidebar-action-btn" onClick={() => setIsSkillsModalOpen(true)}>
-                                <Workflow size={16} />
-                                <span>Skills</span>
-                            </button>
                             <button className="sidebar-action-btn primary" onClick={handleExportPdf} disabled={isGeneratingPDF}>
                                 <FileDown size={16} />
                                 <span>{isGeneratingPDF ? 'Exporting...' : 'Export PDF'}</span>
@@ -968,7 +1642,7 @@ function App() {
                     />
                 )}
 
-                <main className={`glass-card professional-shell page-panel ${!isCompactScreen && activePage === 'workspace' ? 'workspace-no-scroll' : ''} ${!isCompactScreen && activePage === 'documents' ? 'documents-no-scroll' : ''}`}>
+                <main className={`glass-card professional-shell page-panel ${!isCompactScreen && activePage === 'workspace' ? 'workspace-no-scroll' : ''} ${!isCompactScreen && activePage === 'documents' ? 'documents-no-scroll' : ''} ${!isCompactScreen && activePage === 'evidence' ? 'evidence-no-scroll' : ''}`}>
                     <header className="professional-header">
                         {isCompactScreen && (
                             <button
@@ -980,36 +1654,49 @@ function App() {
                                 <span>Menu</span>
                             </button>
                         )}
-                        <div>
+                        <div className="header-info-group">
                             <h1 className={`title ${activePage === 'documents' ? 'documents-title' : ''}`}>
                                 {activePage === 'workspace' && 'Assessment Workspace'}
+                                {activePage === 'multi-resume' && 'Multi-Resume Analysis'}
                                 {activePage === 'documents' && 'Document Overview'}
                                 {activePage === 'evidence' && 'Evidence Layer'}
+                                {activePage === 'skill-matching' && 'Skill Matching'}
+                                {activePage === 'visuals' && 'Visual Analytics'}
                             </h1>
-                            <p className="subtitle">Clear end-to-end flow from input ingestion to recruiter-ready intelligence.</p>
                         </div>
-                        <button className="title-cta-btn" onClick={handleStartNewRun}>Start New Run</button>
+
+                        <div className={`header-right-actions ${activePage === 'documents' ? 'documents-actions-inline' : ''}`}>
+                            {activePage !== 'multi-resume' && (
+                                <button className="title-cta-btn" onClick={handleStartNewRun}>Start New Run</button>
+                            )}
+                            {activePage === 'documents' && extractedData && (
+                                <div className="documents-highlight-toolbar documents-header-tools">
+                                    <button
+                                        className={`highlight-toggle-btn ${isHighlightEnabled ? 'active' : ''}`}
+                                        onClick={() => setIsHighlightEnabled((prev) => !prev)}
+                                    >
+                                        {isHighlightEnabled ? 'Remove Highlight' : 'Highlighter'}
+                                    </button>
+
+                                    <div className="highlight-legend">
+                                        <span className="legend-pill exact">Exact Match</span>
+                                        <span className="legend-pill partial">Partial Match</span>
+                                        <span className="legend-pill missing">Missing Skills</span>
+                                        <span className="legend-pill additional">Additional Resume Skills</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </header>
 
-                    {renderMainContent()}
+                    <div className="page-content-shell">
+                        {renderMainContent()}
+                    </div>
                 </main>
             </div>
 
-            <SkillsModal isOpen={isSkillsModalOpen} onClose={closeSkillsModal} isClosing={isSkillsClosing} data={extractedData || {}} />
-            <BertModal isOpen={isBertModalOpen} onClose={closeBertModal} isClosing={isBertClosing} data={extractedData || {}} />
-            <VisualizationModal isOpen={isVizModalOpen} onClose={closeVizModal} isClosing={isVizClosing} data={extractedData || {}} />
-
-            {showPdfProgress && (
-                <div className="pdf-progress-overlay">
-                    <div className="pdf-progress-card">
-                        <h3>Generating HR Report</h3>
-                        <p>{pdfProgressLabel}</p>
-                        <div className="pdf-progress-ring" style={{ '--progress': `${pdfProgress}%` }}>
-                            <div className="pdf-progress-ring-inner">{pdfProgress}%</div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <PdfProgressModal visible={showPdfProgress} progress={pdfProgress} label={pdfProgressLabel} />
+            <ContextChatbot extractedData={extractedData} />
         </div>
     );
 }

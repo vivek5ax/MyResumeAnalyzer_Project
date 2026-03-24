@@ -108,3 +108,24 @@ def save_data(resume_versions: dict, jd_versions: dict, resume_name: str, jd_nam
         
     return session_id
 
+
+def update_session_metadata(session_id: str, updates: dict) -> None:
+    """Merge additional artifacts into metadata.json for a saved session."""
+    if not session_id or not isinstance(updates, dict) or not updates:
+        return
+
+    metadata_path = Path(__file__).parent.parent / "data" / "sessions" / session_id / "metadata.json"
+    if not metadata_path.exists():
+        return
+
+    try:
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            metadata = json.load(f)
+    except Exception:
+        metadata = {}
+
+    metadata.update(updates)
+
+    with open(metadata_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=4)
+
