@@ -36,7 +36,6 @@ backend/data/sessions/
 *.log
 *.tmp
 *.temp
-*.md
 
 # Environment & OS
 .env
