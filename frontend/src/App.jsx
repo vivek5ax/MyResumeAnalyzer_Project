@@ -224,12 +224,12 @@ function App() {
     const isAnalyzeDisabled = !resume || (!jdFile && !jdText.trim()) || loading;
     const selectedDomain = domainOptions.find(opt => opt.id === domain);
     const navItems = [
-        { id: 'workspace', label: 'Workspace', icon: LayoutDashboard },
-        { id: 'multi-resume', label: 'Multi Resume', icon: Files },
-        { id: 'documents', label: 'Documents', icon: FileText },
+        { id: 'workspace', label: 'File Upload', icon: LayoutDashboard },
+        { id: 'documents', label: 'File Preview', icon: FileText },
         { id: 'skill-matching', label: 'Skill Matching', icon: Workflow },
         { id: 'visuals', label: 'Visualization', icon: BarChart3 },
-        { id: 'evidence', label: 'Evidence', icon: Microscope },
+        { id: 'evidence', label: 'AI Playground', icon: Microscope },
+        { id: 'multi-resume', label: 'Multi Resume', icon: Files },
     ];
 
     const matchedSkills = extractedData?.bert_results?.summary?.exact_match_count || 0;
