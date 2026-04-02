@@ -48,3 +48,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Salesforce DX artifacts
+.sfdx/
