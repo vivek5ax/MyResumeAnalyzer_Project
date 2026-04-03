@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { X, BarChart3, PieChart as PieChartIcon, Target, AlertTriangle, Layers, Activity, Zap, ShieldAlert, Gauge, GitCompareArrows } from 'lucide-react';
+import { X, BarChart3, PieChart as PieChartIcon, Target, AlertTriangle, Layers, Activity } from 'lucide-react';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -20,7 +20,6 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = fal
         { id: 'heatmap', label: 'Category Risk Heatmap' },
         { id: 'semantic', label: 'Semantic Convergence' },
         { id: 'domain', label: 'Domain Skill Categories' },
-        { id: 'talents', label: 'Unsolicited Talents' },
     ];
 
     const bertResults = data.bert_results || {};
@@ -65,17 +64,6 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = fal
         resume: resumeClusters[cat] ? resumeClusters[cat].length : 0
     })).sort((a, b) => b.jd - a.jd).slice(0, 8); // Top 8 categories for sanity
 
-    const semanticScores = [
-        ...(partition.strong_semantic || []).map((entry) => Number(entry.score || 0)),
-        ...(partition.moderate_semantic || []).map((entry) => Number(entry.score || 0)),
-    ];
-    const semanticReliability = semanticScores.length
-        ? Math.round((semanticScores.reduce((acc, cur) => acc + cur, 0) / semanticScores.length) * 100)
-        : 0;
-
-    const weightedRiskIndex = Math.round(missingFromResume.reduce((acc, item) => acc + Number(item.weight || 1), 0) * 10) / 10;
-    const criticalMissingCount = missingFromResume.filter((item) => Number(item.weight || 1) >= 1.3).length;
-
     const matchedJdSkillSet = new Set([
         ...(partition.exact_match || []).map((value) => String(value || '').toLowerCase()),
         ...(partition.strong_semantic || []).map((value) => String(value.similar_to || '').toLowerCase()),
@@ -86,11 +74,6 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = fal
     const strongMatchSet = new Set((partition.strong_semantic || []).map((value) => String(value.similar_to || '').toLowerCase()));
     const moderateMatchSet = new Set((partition.moderate_semantic || []).map((value) => String(value.similar_to || '').toLowerCase()));
     const missingSkillSet = new Set((missingFromResume || []).map((item) => String(item.skill || '').toLowerCase()));
-
-    const totalWeightedDemand = summary.total_jd_skills + weightedRiskIndex;
-    const weightedCoverageScore = totalWeightedDemand > 0
-        ? Math.round((((summary.exact_match_count + summary.semantic_match_count) / totalWeightedDemand) * 100) * 10) / 10
-        : 0;
 
     const categoryHeatmapRows = Object.keys(jdClusters).map((category) => {
         const requiredSkills = jdClusters[category] || [];
@@ -309,10 +292,7 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = fal
         fullMark: Math.max(10, Math.max(resumeClusters[cat].length, (jdClusters[cat] ? jdClusters[cat].length : 0)) + 2)
     }));
 
-    // 6. Extra Skills Badges
-    const extraSkills = bertResults.extra_resume_skills || [];
-
-    // 7. Match Confidence Table Data
+    // 6. Match Confidence Table Data
     const exactMatches = (partition.exact_match || []).map(s => ({ skill: s, type: 'Exact Match', score: 1.0, color: COLORS.success }));
     const strongSemantics = (partition.strong_semantic || []).map(s => ({ skill: s.skill, type: 'Strong Semantic', score: s.score, color: COLORS.info }));
     const moderateSemantics = (partition.moderate_semantic || []).map(s => ({ skill: s.skill, type: 'Moderate Semantic', score: s.score, color: COLORS.warning }));
@@ -462,7 +442,7 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = fal
                         <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', borderTop: `4px solid ${COLORS.info}` }}>
                             <h3 style={{ margin: '0 0 0.9rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '1.05rem' }}>
                                 <Layers size={18} color={COLORS.info} />
-                                Discovered Categories (JD vs Resume)
+                                Skill Category bar chart (JD vs Resume)
                             </h3>
                             <div style={{ height: 340, width: '100%' }}>
                                 <ResponsiveContainer width="100%" height="100%">
@@ -483,7 +463,7 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = fal
                         <div className="content-card" style={{ background: '#1e293b', padding: '1.4rem', display: 'flex', flexDirection: 'column', borderTop: `4px solid ${COLORS.success}` }}>
                             <h3 style={{ margin: '0 0 0 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '1.05rem' }}>
                                 <Activity size={18} color={COLORS.success} />
-                                Resume Expertise Profile
+                                Skill Overlapping Radar chart
                             </h3>
                             <div style={{ marginTop: '0.8rem', minHeight: 320, width: '100%' }}>
                                 {radarData.length >= 3 ? (
@@ -505,41 +485,6 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = fal
                             </div>
                         </div>
 
-                    </div>
-
-                    {/* Phase 1: Executive Intelligence Strip */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))', gap: '0.75rem' }}>
-                        <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #6366f1', padding: '1rem 1.15rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#93c5fd', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>📈</span><span>Weighted Coverage</span></span>
-                                <Gauge size={18} color="#60a5fa" />
-                            </div>
-                            <p style={{ margin: '0.5rem 0 0', color: '#ffffff', fontSize: '1.55rem', fontWeight: 900 }}>{weightedCoverageScore}%</p>
-                        </div>
-
-                        <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #ef4444', padding: '1rem 1.15rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#fca5a5', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>🔥</span><span>Weighted Risk Index</span></span>
-                                <ShieldAlert size={18} color="#f87171" />
-                            </div>
-                            <p style={{ margin: '0.5rem 0 0', color: '#ffffff', fontSize: '1.55rem', fontWeight: 900 }}>{weightedRiskIndex}</p>
-                        </div>
-
-                        <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #f59e0b', padding: '1rem 1.15rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#fcd34d', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>⚠️</span><span>Critical Missing</span></span>
-                                <AlertTriangle size={18} color="#fbbf24" />
-                            </div>
-                            <p style={{ margin: '0.5rem 0 0', color: '#ffffff', fontSize: '1.55rem', fontWeight: 900 }}>{criticalMissingCount}</p>
-                        </div>
-
-                        <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #22c55e', padding: '1rem 1.15rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#86efac', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}><span style={{ fontSize: '1.1rem', lineHeight: 1 }}>✨</span><span>Semantic Reliability</span></span>
-                                <GitCompareArrows size={18} color="#4ade80" />
-                            </div>
-                            <p style={{ margin: '0.5rem 0 0', color: '#ffffff', fontSize: '1.55rem', fontWeight: 900 }}>{semanticReliability}%</p>
-                        </div>
                     </div>
 
                     <div className="content-card" style={{ background: '#1e293b', borderTop: '4px solid #4f46e5', padding: '0.75rem 1rem' }}>
@@ -982,29 +927,6 @@ const VisualizationModal = ({ isOpen, onClose, isClosing, data, isEmbedded = fal
                                     📊 No category/skill map available for this run.
                                 </div>
                             )}
-                        </div>
-                    </div>
-                    )}
-
-                    {/* Section 5: Additional Information */}
-                    {activeViz === 'talents' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr)', gap: '1.25rem' }}>
-                        {/* 6. Extra Skills Cloud */}
-                        <div className="content-card" style={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', padding: '1.4rem', borderTop: `4px solid ${COLORS.warning}` }}>
-                            <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                                <Zap size={20} color={COLORS.warning} />
-                                Unsolicited Candidate Talents
-                            </h3>
-                            <p style={{ margin: '0 0 1.5rem 0', color: '#94a3b8', fontSize: '0.95rem' }}>Skills present in the resume that were not specifically requested by the Job Description.</p>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem' }}>
-                                {extraSkills.length > 0 ? extraSkills.map((skill, i) => (
-                                    <div key={i} style={{ padding: '0.6rem 1.2rem', background: 'rgba(245, 158, 11, 0.15)', border: `1px solid ${COLORS.warning}40`, borderRadius: '30px', color: '#fcd34d', fontSize: '0.9rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                                        {skill}
-                                    </div>
-                                )) : (
-                                    <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No extra unrequired skills detected.</p>
-                                )}
-                            </div>
                         </div>
                     </div>
                     )}

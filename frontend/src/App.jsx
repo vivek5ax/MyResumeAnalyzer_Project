@@ -7,6 +7,7 @@ import VisualizationModal from './components/VisualizationModal';
 import PdfProgressModal from './components/PdfProgressModal';
 import ContextChatbot from './components/ContextChatbot';
 import MultiResumeAnalysis from './components/MultiResumeAnalysis';
+import LandingPage from './components/LandingPage';
 import {
     ChevronDown,
     Menu,
@@ -32,7 +33,7 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isDomainOpen, setIsDomainOpen] = useState(false);
-    const [activePage, setActivePage] = useState('workspace');
+    const [activePage, setActivePage] = useState('landing');
     const [stageStep, setStageStep] = useState(0);
 
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -227,8 +228,8 @@ function App() {
         { id: 'workspace', label: 'File Upload', icon: LayoutDashboard },
         { id: 'documents', label: 'File Preview', icon: FileText },
         { id: 'skill-matching', label: 'Skill Matching', icon: Workflow },
-        { id: 'visuals', label: 'Visualization', icon: BarChart3 },
         { id: 'evidence', label: 'AI Playground', icon: Microscope },
+        { id: 'visuals', label: 'Visualization', icon: BarChart3 },
         { id: 'multi-resume', label: 'Multi Resume', icon: Files },
     ];
 
@@ -1582,12 +1583,25 @@ function App() {
         );
     };
 
+    if (activePage === 'landing') {
+        return <LandingPage onStart={() => setActivePage('workspace')} />;
+    }
+
     return (
         <div className="app-container fade-in">
             <div className="app-layout">
                 <aside className={`sidebar-glass ${isCompactScreen ? 'mobile-drawer' : ''} ${isSidebarOpen ? 'open' : ''}`}>
                     <div className="sidebar-brand-block">
-                        <button className="brand-orb" aria-label="Resume Analyzer Home">✶</button>
+                        <button
+                            className="brand-orb"
+                            aria-label="Resume Analyzer Home"
+                            onClick={() => {
+                                setActivePage('landing');
+                                if (isCompactScreen) setIsSidebarOpen(false);
+                            }}
+                        >
+                            ✶
+                        </button>
                         {isCompactScreen && (
                             <button
                                 className="mobile-drawer-close"

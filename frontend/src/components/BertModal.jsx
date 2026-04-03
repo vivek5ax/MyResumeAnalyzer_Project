@@ -72,21 +72,21 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
 
                     {/* Metrics Summary Bar */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem', marginBottom: '1.2rem' }}>
-                        <div style={{ background: 'white', padding: '0.7rem 0.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                            <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.3rem' }}>JD Req</span>
-                            <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#1e293b' }}>{summary.total_jd_skills}</span>
-                        </div>
                         <div style={{ background: '#dcfce7', padding: '0.7rem 0.5rem', borderRadius: '12px', border: '1px solid #bbf7d0', textAlign: 'center' }}>
                             <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: '800', color: '#166534', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Exact</span>
                             <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#166534' }}>{summary.exact_match_count}</span>
                         </div>
                         <div style={{ background: '#fef3c7', padding: '0.7rem 0.5rem', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center' }}>
-                            <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: '800', color: '#92400e', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Semantic</span>
+                            <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: '800', color: '#92400e', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Partial (Semantic match)</span>
                             <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#92400e' }}>{summary.semantic_match_count}</span>
                         </div>
                         <div style={{ background: '#fee2e2', padding: '0.7rem 0.5rem', borderRadius: '12px', border: '1px solid #fecaca', textAlign: 'center' }}>
                             <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: '800', color: '#991b1b', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Missing</span>
                             <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#991b1b' }}>{summary.missing_skills_count}</span>
+                        </div>
+                        <div style={{ background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', padding: '0.7rem 0.5rem', borderRadius: '12px', border: '1px solid #c4b5fd', textAlign: 'center' }}>
+                            <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: '800', color: '#5b21b6', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Total Required JD Skills</span>
+                            <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#6d28d9' }}>{summary.total_jd_skills}</span>
                         </div>
                     </div>
 
@@ -154,15 +154,15 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                             </div>
                         </div>
 
-                        {/* 4. Irrelevant Pillar */}
+                        {/* 4. Additional Skills Pillar */}
                         <div className="bert-match-card" style={{ padding: '0.2rem' }}>
-                            <h3 className="category-label" style={{ color: '#475569', background: '#f1f5f9', borderRadius: '10px', padding: '0.6rem', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}>
-                                <HelpCircle size={15} /> Unrelated Profile Skils
+                            <h3 className="category-label" style={{ color: '#1e40af', background: '#eff6ff', borderRadius: '10px', padding: '0.6rem', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid #bfdbfe', fontSize: '0.85rem' }}>
+                                <HelpCircle size={15} /> Additional Skills
                             </h3>
                             <div className="skills-list" style={{ maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
                                 {resumeOnly.length > 0 ? (
                                     resumeOnly.map((skill, i) => (
-                                        <span key={i} className="skill-tag skill-pill-irrelevant" style={{ background: 'white', border: '1px solid #e2e8f0' }}>
+                                        <span key={i} className="skill-tag skill-pill-irrelevant" style={{ background: '#f8fbff', border: '1px solid #dbeafe', color: '#1e40af' }}>
                                             {skill}
                                         </span>
                                     ))
@@ -217,7 +217,7 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
 
                             {/* Legend section moved to TOP */}
                             <div style={{
-                                marginBottom: '2.5rem',
+                                marginBottom: '1.8rem',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 flexWrap: 'wrap',
@@ -232,16 +232,16 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                     <span style={{ color: '#475569', fontWeight: '700', fontSize: '0.8rem' }}>Missing JD Skill</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                    <div style={{ width: '14px', height: '14px', background: 'rgba(71, 85, 105, 0.15)', borderRadius: '4px', border: '1.5px solid #94a3b8' }}></div>
-                                    <span style={{ color: '#475569', fontWeight: '700', fontSize: '0.8rem' }}>Non-Relevant Profile Skill</span>
+                                    <div style={{ width: '14px', height: '14px', background: 'rgba(37, 99, 235, 0.15)', borderRadius: '4px', border: '1.5px solid #2563eb' }}></div>
+                                    <span style={{ color: '#475569', fontWeight: '700', fontSize: '0.8rem' }}>Resume Profile Only Skill</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                    <div style={{ width: '14px', height: '14px', background: '#dcfce7', border: '1.5px solid #86efac', borderRadius: '4px' }}></div>
-                                    <span style={{ color: '#475569', fontWeight: '700', fontSize: '0.8rem' }}>Exact Verified Match</span>
+                                    <div style={{ width: '14px', height: '14px', background: '#22c55e', border: '1.5px solid #16a34a', borderRadius: '4px' }}></div>
+                                    <span style={{ color: '#475569', fontWeight: '700', fontSize: '0.8rem' }}>Exact Match</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                    <div style={{ width: '14px', height: '14px', background: '#fef3c7', border: '1.5px solid #fcd34d', borderRadius: '4px' }}></div>
-                                    <span style={{ color: '#475569', fontWeight: '700', fontSize: '0.8rem' }}>Semantic Conceptual Match</span>
+                                    <div style={{ width: '14px', height: '14px', background: '#facc15', border: '1.5px solid #eab308', borderRadius: '4px' }}></div>
+                                    <span style={{ color: '#475569', fontWeight: '700', fontSize: '0.8rem' }}>Partial Match</span>
                                 </div>
                             </div>
 
@@ -253,9 +253,19 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                             <stop offset="100%" style={{ stopColor: '#b91c1c', stopOpacity: 0.08 }} />
                                         </linearGradient>
                                         <linearGradient id="resumeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 0.15 }} />
-                                            <stop offset="100%" style={{ stopColor: '#059669', stopOpacity: 0.08 }} />
+                                            <stop offset="0%" style={{ stopColor: '#2563eb', stopOpacity: 0.15 }} />
+                                            <stop offset="100%" style={{ stopColor: '#1d4ed8', stopOpacity: 0.08 }} />
                                         </linearGradient>
+                                        <linearGradient id="intersectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" style={{ stopColor: '#22c55e', stopOpacity: 0.22 }} />
+                                            <stop offset="100%" style={{ stopColor: '#16a34a', stopOpacity: 0.14 }} />
+                                        </linearGradient>
+                                        <clipPath id="leftCircleClip">
+                                            <circle cx="410" cy="325" r="235" />
+                                        </clipPath>
+                                        <clipPath id="rightCircleClip">
+                                            <circle cx="590" cy="325" r="235" />
+                                        </clipPath>
                                         <filter id="vennShadowStrong" x="-20%" y="-20%" width="140%" height="140%">
                                             <feGaussianBlur in="SourceAlpha" stdDeviation="5" />
                                             <feOffset dx="4" dy="4" result="offsetblur" />
@@ -270,17 +280,20 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                     </defs>
 
                                     {/* Left Circle - Job Description (Missing Needs) */}
-                                    <circle cx="410" cy="325" r="210" fill="url(#jdGradient)" stroke="#ef4444" strokeWidth="1.8" strokeDasharray="8,4" filter="url(#vennShadowStrong)" />
+                                    <circle cx="410" cy="325" r="235" fill="url(#jdGradient)" stroke="#ef4444" strokeWidth="1.8" strokeDasharray="8,4" filter="url(#vennShadowStrong)" />
 
                                     {/* Right Circle - Resume Profile (Overlap + Extra) */}
-                                    <circle cx="590" cy="325" r="210" fill="url(#resumeGradient)" stroke="#10b981" strokeWidth="1.8" strokeDasharray="8,4" filter="url(#vennShadowStrong)" />
+                                    <circle cx="590" cy="325" r="235" fill="url(#resumeGradient)" stroke="#2563eb" strokeWidth="1.8" strokeDasharray="8,4" filter="url(#vennShadowStrong)" />
+
+                                    {/* Explicit intersection lens to keep overlap green */}
+                                    <circle cx="410" cy="325" r="235" fill="url(#intersectionGradient)" clipPath="url(#rightCircleClip)" />
 
                                     {/* Labels with enhanced typography */}
                                     <rect x="230" y="20" width="160" height="32" rx="16" fill="#fef2f2" />
                                     <text x="310" y="41" textAnchor="middle" style={{ fontSize: '0.75rem', fontWeight: 900, fill: '#991b1b', letterSpacing: '0.04em' }}>MISSING EXPECTATIONS</text>
 
-                                    <rect x="610" y="20" width="160" height="32" rx="16" fill="#f1f5f9" />
-                                    <text x="690" y="41" textAnchor="middle" style={{ fontSize: '0.75rem', fontWeight: 900, fill: '#065f46', letterSpacing: '0.04em' }}>RESUME PROFILE</text>
+                                    <rect x="610" y="20" width="160" height="32" rx="16" fill="#eff6ff" />
+                                    <text x="690" y="41" textAnchor="middle" style={{ fontSize: '0.75rem', fontWeight: 900, fill: '#1d4ed8', letterSpacing: '0.04em' }}>RESUME PROFILE</text>
 
                                     {/* JD Only Missing Skills - Dynamic sizing */}
                                     <foreignObject x="230" y="135" width="160" height="350">
@@ -290,11 +303,11 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                                 const padding = jdOnly.length > 20 ? '2px 5px' : '2px 7px';
                                                 return (
                                                     <div key={i} style={{
-                                                        background: 'rgba(239, 68, 68, 0.08)',
+                                                        background: '#ef4444',
                                                         padding: padding,
                                                         borderRadius: '4px',
-                                                        border: '1px solid rgba(239, 68, 68, 0.12)',
-                                                        color: '#991b1b',
+                                                        border: '1px solid #dc2626',
+                                                        color: '#ffffff',
                                                         fontSize: fontSize,
                                                         fontWeight: '700',
                                                         boxShadow: '0 1px 1px rgba(0,0,0,0.01)',
@@ -329,11 +342,11 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                                 const padding = resumeOnly.length > 20 ? '2px 5px' : '2px 7px';
                                                 return (
                                                     <div key={i} style={{
-                                                        background: 'rgba(71, 85, 105, 0.08)',
+                                                        background: '#2563eb',
                                                         padding: padding,
                                                         borderRadius: '4px',
-                                                        border: '1px solid rgba(71, 85, 105, 0.12)',
-                                                        color: '#475569',
+                                                        border: '1px solid #1d4ed8',
+                                                        color: '#ffffff',
                                                         fontSize: fontSize,
                                                         fontWeight: '700',
                                                         boxShadow: '0 1px 1px rgba(0,0,0,0.01)',
@@ -348,7 +361,7 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                                 <button
                                                     onClick={() => setExpandedRegion(expandedRegion === 'resume' ? null : 'resume')}
                                                     style={{
-                                                        color: '#475569', fontSize: '0.7rem', fontWeight: '800',
+                                                        color: '#1d4ed8', fontSize: '0.7rem', fontWeight: '800',
                                                         background: 'white', border: '1px solid #cbd5e1',
                                                         padding: '4px 10px', borderRadius: '12px', cursor: 'pointer',
                                                         transition: 'all 0.2s ease',
@@ -378,11 +391,11 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                                 const padding = matchedSkills.length > 20 ? '2px 5px' : '2px 7px';
                                                 return (
                                                     <div key={i} style={{
-                                                        background: isExact ? '#dcfce7' : '#fef3c7',
-                                                        color: isExact ? '#166534' : '#92400e',
+                                                        background: isExact ? '#22c55e' : '#facc15',
+                                                        color: isExact ? '#ffffff' : '#78350f',
                                                         padding: padding,
                                                         borderRadius: '5px',
-                                                        border: isExact ? '1px solid #86efac' : '1px solid #fcd34d',
+                                                        border: isExact ? '1px solid #16a34a' : '1px solid #eab308',
                                                         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                                                         fontSize: fontSize,
                                                         fontWeight: '800',
@@ -437,20 +450,20 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                     {expandedRegion === 'resume' && (
                                         <g style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                             {/* Anchor point at start of arrow */}
-                                            <circle cx="785" cy="325" r="3" fill="#64748b" opacity="0.6" />
+                                            <circle cx="785" cy="325" r="3" fill="#2563eb" opacity="0.6" />
                                             {/* Curved dotted line toward right popup */}
-                                            <path d="M 785 325 Q 840 325, 870 180" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4,4" />
+                                            <path d="M 785 325 Q 840 325, 870 180" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="4,4" />
                                             {/* Arrow head landing at edge of pop-up */}
-                                            <polygon points="865,190 870,180 875,190" fill="#64748b" opacity="0.6" />
+                                            <polygon points="865,190 870,180 875,190" fill="#2563eb" opacity="0.6" />
                                             <foreignObject x="780" y="115" width="180" height="380">
                                                 <div style={{
-                                                    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', border: '1.5px solid #cbd5e1', borderRadius: '14px', padding: '10px',
-                                                    maxHeight: '340px', overflowY: 'auto', boxShadow: '0 10px 15px -3px rgba(100, 116, 139, 0.1)',
+                                                    background: 'linear-gradient(135deg, #ffffff 0%, #eff6ff 100%)', border: '1.5px solid #bfdbfe', borderRadius: '14px', padding: '10px',
+                                                    maxHeight: '340px', overflowY: 'auto', boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.1)',
                                                 }}>
-                                                    <h4 style={{ color: '#334155', fontSize: '0.8rem', marginBottom: '8px', textAlign: 'center', fontWeight: '900', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px' }}>Additional Profile</h4>
+                                                    <h4 style={{ color: '#1d4ed8', fontSize: '0.8rem', marginBottom: '8px', textAlign: 'center', fontWeight: '900', borderBottom: '1px solid #dbeafe', paddingBottom: '6px' }}>Additional Profile</h4>
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', justifyContent: 'center' }}>
                                                         {resumeToPopup.map((s, i) => (
-                                                            <div key={i} style={{ background: '#f8fafc', padding: '4px 8px', borderRadius: '6px', fontSize: '0.65rem', color: '#475569', fontWeight: '800', border: '1px solid #cbd5e1' }}>{s}</div>
+                                                            <div key={i} style={{ background: '#2563eb', padding: '4px 8px', borderRadius: '6px', fontSize: '0.65rem', color: '#ffffff', fontWeight: '800', border: '1px solid #1d4ed8' }}>{s}</div>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -485,13 +498,13 @@ const BertModal = ({ isOpen, onClose, isClosing, data, isEmbedded = false }) => 
                                                             const isExact = exactMatchStrings.includes(s);
                                                             return (
                                                                 <div key={i} style={{
-                                                                    background: isExact ? '#dcfce7' : '#fef3c7',
-                                                                    color: isExact ? '#166534' : '#92400e',
+                                                                    background: isExact ? '#22c55e' : '#facc15',
+                                                                    color: isExact ? '#ffffff' : '#78350f',
                                                                     padding: '4px 8px',
                                                                     borderRadius: '6px',
                                                                     fontSize: '0.65rem',
                                                                     fontWeight: '800',
-                                                                    border: isExact ? '1.2px solid #86efac' : '1.2px solid #fcd34d',
+                                                                    border: isExact ? '1.2px solid #16a34a' : '1.2px solid #eab308',
                                                                     boxShadow: isExact ? '0 1px 4px rgba(16, 185, 129, 0.05)' : '0 1px 4px rgba(245, 158, 11, 0.05)',
                                                                     transition: 'all 0.2s ease',
                                                                     cursor: 'default'
