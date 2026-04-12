@@ -17,8 +17,26 @@ except Exception:
 
 # Hardware Acceleration Setup
 device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
-print(f"🚀 Initializing BERT Model on DEVICE: {device.upper()}")
-model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
+_MODEL = None
+_MODEL_LOAD_ERROR = None
+
+
+def _get_model():
+    """Lazy-load embedding model to keep API startup fast on serverless/container platforms."""
+    global _MODEL, _MODEL_LOAD_ERROR
+    if _MODEL is not None:
+        return _MODEL
+    if _MODEL_LOAD_ERROR is not None:
+        return None
+
+    try:
+        print(f"🚀 Initializing BERT Model on DEVICE: {device.upper()}")
+        _MODEL = SentenceTransformer('all-MiniLM-L6-v2', device=device)
+        return _MODEL
+    except Exception as err:
+        _MODEL_LOAD_ERROR = str(err)
+        print(f"⚠️ Failed to initialize BERT model: {_MODEL_LOAD_ERROR}")
+        return None
 
 # Global Performance Caches
 DOMAIN_SKILL_EMBEDDINGS = {}
@@ -144,6 +162,10 @@ def get_domain_embeddings(domain: str):
     # Generate canonical list
     canonical_skills = sorted(list(skills_flat.keys()))
     
+    model = _get_model()
+    if model is None:
+        return canonical_skills, None
+
     # Batch Encode
     embeddings = model.encode(canonical_skills, convert_to_tensor=True, normalize_embeddings=True, device=device)
     
@@ -183,6 +205,7 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
     
     resume_text = sanitize_resume_text(resume_text)
     
+    model = _get_model()
     taxonomy_data = load_taxonomy(domain)
     skills_flat = taxonomy_data["skills_flat"]
 
@@ -195,7 +218,7 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
     moderate_base = max(threshold_profile["moderate"], float(threshold))
     
     jd_skills = [s.lower() for s in raw_jd_displays]
-    jd_embeddings = model.encode(jd_skills, convert_to_tensor=True, normalize_embeddings=True, device=device) if jd_skills else None
+    jd_embeddings = model.encode(jd_skills, convert_to_tensor=True, normalize_embeddings=True, device=device) if (jd_skills and model is not None) else None
     
     resume_skills = [s.lower() for s in raw_resume_displays]
     
@@ -230,7 +253,7 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
         }
 
     # Evaluate Extracted Resume Skills
-    resume_embeddings = model.encode(resume_skills, convert_to_tensor=True, normalize_embeddings=True, device=device) if resume_skills else None
+    resume_embeddings = model.encode(resume_skills, convert_to_tensor=True, normalize_embeddings=True, device=device) if (resume_skills and model is not None) else None
     
     if resume_embeddings is not None and len(resume_skills) > 0:
         similarity_matrix = util.cos_sim(resume_embeddings, jd_embeddings)
@@ -275,6 +298,14 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
                 })
             else:
                 partition["irrelevant"].append(display_r)
+    elif len(resume_skills) > 0:
+        # Fallback mode when transformer model is not available.
+        for i, r_skill in enumerate(resume_skills):
+            display_r = raw_resume_displays[i]
+            if r_skill in jd_skills and re.search(rf'\b{re.escape(r_skill)}\b', resume_text.lower()):
+                partition["exact_match"].append(display_r)
+            else:
+                partition["irrelevant"].append(display_r)
     
     matched_jd_lowered = set([s.lower() for s in partition["exact_match"]])
     for d in partition["strong_semantic"]:
@@ -294,7 +325,7 @@ def analyze_semantic_matching(raw_jd_displays: list, raw_resume_displays: list, 
                 if 3 <= len(segment.split()) <= 40:
                     resume_segments.append(segment)
                     
-        if resume_segments:
+        if resume_segments and model is not None:
             segment_embeddings = model.encode(resume_segments, convert_to_tensor=True, normalize_embeddings=True, device=device)
             candidate_embeddings = model.encode([c.lower() for c in missing_candidates], convert_to_tensor=True, normalize_embeddings=True, device=device)
             
