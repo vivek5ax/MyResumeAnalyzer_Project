@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Mail, Lock, User, AlertCircle, Loader, Eye, EyeOff } from 'lucide-react';
 import '../styles/auth.css';
+import { apiUrl } from '../config/api';
 
 export default function SignupPage({ onSignupSuccess, onSwitchToLogin }) {
   const [fullName, setFullName] = useState('');
@@ -43,7 +44,7 @@ export default function SignupPage({ onSignupSuccess, onSwitchToLogin }) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/auth/signup', {
+      const response = await fetch(apiUrl('/auth/signup'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

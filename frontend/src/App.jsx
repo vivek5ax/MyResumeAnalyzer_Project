@@ -10,6 +10,7 @@ import MultiResumeAnalysis from './components/MultiResumeAnalysis';
 import LandingPage from './components/LandingPage';
 import AuthGate from './components/AuthGate';
 import { useAuth } from './hooks/useAuth';
+import { apiUrl } from './config/api';
 import {
     ChevronDown,
     Menu,
@@ -88,7 +89,7 @@ function AppContent() {
             setHistoryError(null);
 
             try {
-                const response = await fetch('http://localhost:8000/auth/admin/analysis-history?limit=200', {
+                const response = await fetch(apiUrl('/auth/admin/analysis-history?limit=200'), {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -173,7 +174,7 @@ function AppContent() {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const response = await fetch('http://localhost:8000/extract', {
+            const response = await fetch(apiUrl('/extract'), {
                 method: 'POST',
                 headers,
                 body: formData,
@@ -231,7 +232,7 @@ function AppContent() {
             // Kick off UI animation and fetch simultaneously
             const [, response] = await Promise.all([
                 animatePhases(),
-                fetch('http://localhost:8000/export-pdf', {
+                fetch(apiUrl('/export-pdf'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(extractedData),

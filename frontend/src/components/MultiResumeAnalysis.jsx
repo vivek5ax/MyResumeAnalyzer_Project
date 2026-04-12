@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import FileUpload from './FileUpload';
 import { ChevronDown, FileText, Files, Loader2, Trophy } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000';
+import { apiUrl } from '../config/api';
 
 const MAX_FILES = 10;
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt'];
@@ -178,7 +177,7 @@ const MultiResumeAnalysis = ({ domainOptions }) => {
             formData.append('job_description_file', jdFile);
             resumeFiles.forEach((file) => formData.append('resumes', file));
 
-            const response = await fetch(`${API_BASE}/extract-multi-resume`, {
+            const response = await fetch(apiUrl('/extract-multi-resume'), {
                 method: 'POST',
                 body: formData,
             });

@@ -4,6 +4,7 @@ import { X, FileText, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import FormalReport from './FormalReport';
+import { apiUrl } from '../config/api';
 
 const ReportModal = ({ isOpen, onClose, isClosing, data }) => {
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -17,7 +18,7 @@ const ReportModal = ({ isOpen, onClose, isClosing, data }) => {
             setIsGeneratingPDF(true);
 
             // POST the exact context data to the Python backend
-            const response = await fetch('http://localhost:8000/export-pdf', {
+            const response = await fetch(apiUrl('/export-pdf'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

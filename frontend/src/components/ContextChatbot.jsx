@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Bot, Loader2, MessageCircle, SendHorizontal, X } from 'lucide-react';
+import { apiUrl } from '../config/api';
 
-const API_BASE = 'http://localhost:8000';
 const RESUME_FAQ_PILLS = [
     {
         id: 'matched_skills',
@@ -390,7 +390,7 @@ const ContextChatbot = ({ extractedData }) => {
         setIsSending(true);
 
         try {
-            const response = await fetch(`${API_BASE}/chat/message`, {
+            const response = await fetch(apiUrl('/chat/message'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -558,7 +558,7 @@ const ContextChatbot = ({ extractedData }) => {
         setIsSending(true);
 
         try {
-            const response = await fetch(`${API_BASE}/chat/message`, {
+            const response = await fetch(apiUrl('/chat/message'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

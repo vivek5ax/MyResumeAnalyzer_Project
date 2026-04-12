@@ -12,10 +12,20 @@ load_dotenv()
 app = FastAPI(title="Resume Analyzer API")
 
 # Configure CORS
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+frontend_origin_raw = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+frontend_origins = [
+    origin.strip()
+    for origin in frontend_origin_raw.split(",")
+    if origin.strip()
+]
+
+for default_origin in ["http://localhost:5173", "http://127.0.0.1:5173"]:
+    if default_origin not in frontend_origins:
+        frontend_origins.append(default_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_origin, "http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=frontend_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

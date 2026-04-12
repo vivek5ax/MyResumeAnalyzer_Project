@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { CheckCircle, X, FileText, FileSearch, BrainCircuit, BarChart3 } from 'lucide-react';
 import SkillMatchingModal from './SkillMatchingModal';
 import VisualizationModal from './VisualizationModal';
+import { apiUrl } from '../config/api';
 
 const Preview = ({ data, hideActions = false }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,7 +21,7 @@ const Preview = ({ data, hideActions = false }) => {
             setIsGeneratingPDF(true);
 
             // POST the exact context data to the Python backend
-            const response = await fetch('http://localhost:8000/export-pdf', {
+            const response = await fetch(apiUrl('/export-pdf'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

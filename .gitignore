@@ -42,6 +42,8 @@ backend/data/sessions/
 # Environment & OS
 .env
 .env.*
+!.env.example
+!**/.env.example
 .DS_Store
 Thumbs.db
 
