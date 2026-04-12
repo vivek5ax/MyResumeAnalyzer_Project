@@ -1,6 +1,9 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Depends
 from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Dict, Any, List
+from datetime import datetime
+from bson.objectid import ObjectId
 import asyncio
 import os
 from services.validator import validate_file
@@ -13,8 +16,31 @@ from services.evidence_layer_builder import build_evidence_layer_payload
 from services.hr_decision_layer import build_hr_decision_layer
 from services.candidate_decision_layer import build_candidate_decision_layer
 from services.pdf_generator import generate_formal_pdf
+from database import get_database
+from auth_utils import verify_token
+from auth_models import AnalysisHistory
 
 router = APIRouter()
+security = HTTPBearer(auto_error=False)  # Make bearer token optional
+
+
+async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user from bearer token (optional)"""
+    if not credentials:
+        return None
+    
+    try:
+        token = credentials.credentials
+        payload = verify_token(token)
+        
+        if not payload:
+            return None
+        
+        return payload.get("sub")  # Returns user_id
+    except Exception as e:
+        # If token verification fails, return None (optional auth)
+        print(f"Optional auth verification failed: {str(e)}")
+        return None
 
 
 def _display_resume_name(filename: str) -> str:
@@ -26,7 +52,8 @@ async def extract_content(
     resume: UploadFile = File(...),
     job_description_file: UploadFile = File(None),
     job_description_text: str = Form(None),
-    domain: str = Form("software")
+    domain: str = Form("software"),
+    user_id: str = Depends(get_current_user_optional)
 ):
     # Match frontend validation logic
     await validate_file(resume)
@@ -146,7 +173,8 @@ async def extract_content(
         },
     )
     
-    return {
+    # Build the response object
+    response = {
         "status": "success",
         "session_id": session_id,
         "resume_text": resume_raw,
@@ -161,6 +189,46 @@ async def extract_content(
         "hr_decision_layer": hr_decision,
         "candidate_decision_layer": candidate_decision,
     }
+    
+    # Save analysis result to analysis_history if user is authenticated
+    if user_id:
+        try:
+            db = get_database()
+            
+            # Get user email from MongoDB
+            users_collection = db["users"]
+            user = await users_collection.find_one({"_id": ObjectId(user_id)})
+            user_email = user.get("email", "unknown_user") if user else "unknown_user"
+            
+            # Determine JD source type
+            jd_source_type = "file" if job_description_file else "text"
+            
+            # Create analysis history document
+            analysis_doc = AnalysisHistory.to_dict(
+                user_id=user_id,
+                user_email=user_email,
+                domain=domain,
+                resume_file_name=resume_name,
+                jd_source_type=jd_source_type,
+                result_json=response,
+                summary={
+                    "total_resume_skills": len(resume_skills),
+                    "total_jd_skills": len(jd_skills),
+                    "matched_skills": bert_results.get("matched_skills", []),
+                    "missing_skills": bert_results.get("missing_skills", []),
+                    "overall_match_percentage": bert_results.get("overall_match_percentage", 0),
+                }
+            )
+            
+            # Save to analysis_history collection
+            analysis_history_collection = db["analysis_history"]
+            await analysis_history_collection.insert_one(analysis_doc)
+            
+        except Exception as e:
+            # Log error but don't fail the analysis - just warn
+            print(f"Warning: Failed to save to analysis_history: {str(e)}")
+    
+    return response
 
 @router.post("/export-pdf")
 async def export_pdf(payload: Dict[str, Any] = Body(...)):

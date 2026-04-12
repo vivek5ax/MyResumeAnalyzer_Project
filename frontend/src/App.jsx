@@ -8,10 +8,13 @@ import PdfProgressModal from './components/PdfProgressModal';
 import ContextChatbot from './components/ContextChatbot';
 import MultiResumeAnalysis from './components/MultiResumeAnalysis';
 import LandingPage from './components/LandingPage';
+import AuthGate from './components/AuthGate';
+import { useAuth } from './hooks/useAuth';
 import {
     ChevronDown,
     Menu,
     X,
+    History,
     LayoutDashboard,
     FileText,
     BarChart3,
@@ -22,9 +25,11 @@ import {
     Circle,
     Microscope,
     Files,
+    LogOut,
 } from 'lucide-react';
 
-function App() {
+function AppContent() {
+    const { user, logout, token } = useAuth();
     const [resume, setResume] = useState(null);
     const [jdFile, setJdFile] = useState(null);
     const [jdText, setJdText] = useState("");
@@ -45,6 +50,11 @@ function App() {
     const [evidenceSectionTab, setEvidenceSectionTab] = useState('overview');
     const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [analysisHistory, setAnalysisHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState(null);
+
+    const isAdmin = String(user?.role || '').toLowerCase() === 'admin';
 
     const isCompactScreen = viewportWidth <= 700;
 
@@ -59,6 +69,58 @@ function App() {
             setIsSidebarOpen(false);
         }
     }, [isCompactScreen]);
+
+    React.useEffect(() => {
+        if (!isAdmin && activePage === 'analysis-history') {
+            setActivePage('workspace');
+        }
+    }, [isAdmin, activePage]);
+
+    React.useEffect(() => {
+        if (activePage !== 'analysis-history' || !isAdmin || !token) {
+            return;
+        }
+
+        let isMounted = true;
+
+        const fetchAnalysisHistory = async () => {
+            setHistoryLoading(true);
+            setHistoryError(null);
+
+            try {
+                const response = await fetch('http://localhost:8000/auth/admin/analysis-history?limit=200', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to load analysis history');
+                }
+
+                const payload = await response.json();
+                if (isMounted) {
+                    setAnalysisHistory(Array.isArray(payload?.records) ? payload.records : []);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setHistoryError(err?.message || 'Unable to load analysis history right now.');
+                    setAnalysisHistory([]);
+                }
+            } finally {
+                if (isMounted) {
+                    setHistoryLoading(false);
+                }
+            }
+        };
+
+        fetchAnalysisHistory();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [activePage, isAdmin, token]);
 
     // Domain Options
     const domainOptions = [
@@ -106,8 +168,14 @@ function App() {
         }
 
         try {
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch('http://localhost:8000/extract', {
                 method: 'POST',
+                headers,
                 body: formData,
             });
 
@@ -232,6 +300,10 @@ function App() {
         { id: 'visuals', label: 'Visualization', icon: BarChart3 },
         { id: 'multi-resume', label: 'Multi Resume', icon: Files },
     ];
+
+    if (isAdmin) {
+        navItems.push({ id: 'analysis-history', label: 'Analysis History', icon: History });
+    }
 
     const matchedSkills = extractedData?.bert_results?.summary?.exact_match_count || 0;
     const semanticSkills = extractedData?.bert_results?.summary?.semantic_match_count || 0;
@@ -1404,6 +1476,152 @@ function App() {
             return <MultiResumeAnalysis domainOptions={domainOptions} />;
         }
 
+        if (activePage === 'analysis-history') {
+            if (!isAdmin) {
+                return (
+                    <section className="documents-panel fade-in neo-panel">
+                        <div className="results-empty">Admin access required to view analysis history.</div>
+                    </section>
+                );
+            }
+
+            if (historyLoading) {
+                return (
+                    <section className="documents-panel fade-in neo-panel">
+                        <div className="results-empty">Loading analysis history...</div>
+                    </section>
+                );
+            }
+
+            if (historyError) {
+                return (
+                    <section className="documents-panel fade-in neo-panel">
+                        <div className="error-message fade-in">{historyError}</div>
+                    </section>
+                );
+            }
+
+            if (!analysisHistory.length) {
+                return (
+                    <section className="documents-panel fade-in neo-panel">
+                        <div className="results-empty">No analysis history found yet.</div>
+                    </section>
+                );
+            }
+
+            return (
+                <section className="documents-panel fade-in neo-panel analysis-history-panel">
+                    <div className="analysis-history-grid">
+                        {analysisHistory.map((item) => {
+                            const summary = item?.summary || {};
+                            const overallMatch = Number(
+                                summary?.overall_match_percentage
+                                ?? item?.result_json?.bert_results?.overall_match_percentage
+                                ?? item?.result_json?.bert_results?.summary?.overall_alignment_score
+                                ?? 0
+                            );
+
+                            return (
+                                <article className="analysis-history-card" key={item.id}>
+                                    <div className="analysis-history-head">
+                                        <p className="doc-label">User</p>
+                                        <p className="doc-value">{item.user_email || 'unknown_user'}</p>
+                                    </div>
+
+                                    {(() => {
+                                        const result = item?.result_json || {};
+                                        const bertResults = result?.bert_results || {};
+                                        const bertSummary = bertResults?.summary || {};
+                                        const skillPartition = bertResults?.skill_partition || {};
+                                        const aiEnrichmentResult = result?.ai_enrichment || {};
+                                        const aiQuality = aiEnrichmentResult?.quality || {};
+                                        const hrExec = result?.hr_decision_layer?.executive_recommendation || {};
+                                        const candidateGuidanceResult = result?.candidate_decision_layer?.overall_guidance || {};
+
+                                        const normalizeSkills = (arr) => (
+                                            Array.isArray(arr)
+                                                ? arr
+                                                    .map((entry) => {
+                                                        if (typeof entry === 'string') return entry;
+                                                        if (entry && typeof entry === 'object') {
+                                                            return entry.skill || entry.name || entry.term || entry.label || '';
+                                                        }
+                                                        return '';
+                                                    })
+                                                    .map((value) => String(value || '').trim())
+                                                    .filter(Boolean)
+                                                : []
+                                        );
+
+                                        const exactSkills = normalizeSkills(skillPartition?.exact_match || []);
+                                        const matchedSkills = normalizeSkills(summary?.matched_skills || []);
+                                        const missingSkills = normalizeSkills(
+                                            summary?.missing_skills
+                                            || (Array.isArray(bertResults?.missing_from_resume)
+                                                ? bertResults.missing_from_resume.map((entry) => (typeof entry === 'string' ? entry : entry?.skill || ''))
+                                                : [])
+                                        );
+
+                                        const strongSemantic = Array.isArray(skillPartition?.strong_semantic) ? skillPartition.strong_semantic.length : 0;
+                                        const moderateSemantic = Array.isArray(skillPartition?.moderate_semantic) ? skillPartition.moderate_semantic.length : 0;
+
+                                        const exactCount = Number(bertSummary?.exact_match_count ?? exactSkills.length ?? 0);
+                                        const semanticCount = Number(bertSummary?.semantic_match_count ?? (strongSemantic + moderateSemantic));
+                                        const missingCount = Number(bertSummary?.missing_skills_count ?? missingSkills.length ?? 0);
+
+                                        const topMatchedText = normalizeSkills(exactSkills.length ? exactSkills : matchedSkills).slice(0, 4).join(', ') || 'N/A';
+                                        const topMissingText = missingSkills.slice(0, 4).join(', ') || 'N/A';
+                                        const aiCoveragePercent = Math.round((Number(aiQuality?.coverage_score || 0)) * 100);
+
+                                        return (
+                                            <div className="analysis-mini-grid">
+                                                <section className="analysis-mini-section">
+                                                    <p className="analysis-mini-title">1. Run Info</p>
+                                                    <p><strong>Domain:</strong> {item.domain || 'N/A'}</p>
+                                                    <p><strong>JD Source:</strong> {item.jd_source_type || 'N/A'}</p>
+                                                    <p><strong>Resume File:</strong> {item.resume_file_name || 'N/A'}</p>
+                                                    <p><strong>Created:</strong> {formatIsoTimestamp(item.created_at)}</p>
+                                                </section>
+
+                                                <section className="analysis-mini-section">
+                                                    <p className="analysis-mini-title">2. Match Metrics</p>
+                                                    <p><strong>Overall Match:</strong> {Number.isFinite(overallMatch) ? Math.round(overallMatch) : 0}%</p>
+                                                    <p><strong>Exact Matches:</strong> {exactCount}</p>
+                                                    <p><strong>Semantic Matches:</strong> {semanticCount}</p>
+                                                    <p><strong>Missing Skills:</strong> {missingCount}</p>
+                                                </section>
+
+                                                <section className="analysis-mini-section">
+                                                    <p className="analysis-mini-title">3. Skills Snapshot</p>
+                                                    <p><strong>Top Matched:</strong> {topMatchedText}</p>
+                                                    <p><strong>Top Missing:</strong> {topMissingText}</p>
+                                                </section>
+
+                                                <section className="analysis-mini-section">
+                                                    <p className="analysis-mini-title">4. AI Summary</p>
+                                                    <p><strong>Status:</strong> {String(aiEnrichmentResult?.status || 'N/A')}</p>
+                                                    <p><strong>Model:</strong> {String(aiEnrichmentResult?.model || 'N/A')}</p>
+                                                    <p><strong>Coverage:</strong> {Number.isFinite(aiCoveragePercent) ? aiCoveragePercent : 0}%</p>
+                                                    <p><strong>Risk:</strong> {String(aiQuality?.hallucination_risk || 'N/A')}</p>
+                                                </section>
+
+                                                <section className="analysis-mini-section">
+                                                    <p className="analysis-mini-title">5. Decision Signals</p>
+                                                    <p><strong>HR Recommendation:</strong> {String(hrExec?.recommendation || hrExec?.summary || 'N/A')}</p>
+                                                    <p><strong>Hiring Stage:</strong> {String(hrExec?.hiring_stage || result?.hr_decision_layer?.hiring_readiness?.stage || 'N/A')}</p>
+                                                    <p><strong>Candidate Action:</strong> {String(candidateGuidanceResult?.recommended_action || 'N/A')}</p>
+                                                </section>
+                                            </div>
+                                        );
+                                    })()}
+                                </article>
+                            );
+                        })}
+                    </div>
+                </section>
+            );
+        }
+
         if (activePage === 'skill-matching') {
             if (!extractedData) {
                 return (
@@ -1646,6 +1864,24 @@ function App() {
                         <p className="doc-label">Current Domain</p>
                         <p className="doc-value">{selectedDomain?.label}</p>
                     </div>
+
+                    <div className="sidebar-user-info">
+                        <div className="user-details">
+                            <p className="user-label">Logged in as</p>
+                            <p className="user-email">{user?.email}</p>
+                        </div>
+                        <button
+                            className="sidebar-logout-btn"
+                            onClick={() => {
+                                logout();
+                                setActivePage('landing');
+                            }}
+                            title="Logout"
+                        >
+                            <LogOut size={16} />
+                            <span>Logout</span>
+                        </button>
+                    </div>
                 </aside>
 
                 {isCompactScreen && isSidebarOpen && (
@@ -1672,6 +1908,7 @@ function App() {
                             <h1 className={`title ${activePage === 'documents' ? 'documents-title' : ''}`}>
                                 {activePage === 'workspace' && 'Assessment Workspace'}
                                 {activePage === 'multi-resume' && 'Multi-Resume Analysis'}
+                                {activePage === 'analysis-history' && 'Analysis History'}
                                 {activePage === 'documents' && 'Document Overview'}
                                 {activePage === 'evidence' && 'Evidence Layer'}
                                 {activePage === 'skill-matching' && 'Skill Matching'}
@@ -1680,7 +1917,7 @@ function App() {
                         </div>
 
                         <div className={`header-right-actions ${activePage === 'documents' ? 'documents-actions-inline' : ''}`}>
-                            {activePage !== 'multi-resume' && (
+                            {activePage !== 'multi-resume' && activePage !== 'analysis-history' && (
                                 <button className="title-cta-btn" onClick={handleStartNewRun}>Start New Run</button>
                             )}
                             {activePage === 'documents' && extractedData && (
@@ -1712,6 +1949,14 @@ function App() {
             <PdfProgressModal visible={showPdfProgress} progress={pdfProgress} label={pdfProgressLabel} />
             <ContextChatbot extractedData={extractedData} />
         </div>
+    );
+}
+
+function App() {
+    return (
+        <AuthGate>
+            <AppContent />
+        </AuthGate>
     );
 }
 
